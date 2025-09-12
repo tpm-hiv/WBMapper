@@ -1,0 +1,1995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warner Mapper - Enhanced</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #ffd700 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+		.header {
+			margin-bottom: 40px;
+			border-radius: 25px;
+			box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+			overflow: hidden;
+			position: relative;
+		}
+
+		.header img {
+			width: 100%;
+			height: auto;
+			display: block;
+			object-fit: cover;
+		}
+
+        .drop-zone {
+            background: rgba(20, 40, 80, 0.8);
+            border: 3px dashed #ffd700;
+            border-radius: 25px;
+            padding: 60px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .drop-zone:hover {
+            border-color: #1e90ff;
+            background: rgba(30, 50, 90, 0.9);
+            transform: translateY(-3px);
+            box-shadow: 0 20px 45px rgba(0,0,0,0.4);
+        }
+
+        .drop-zone.dragover {
+            background: rgba(30, 60, 120, 0.9);
+            border-color: #1e90ff;
+            transform: scale(1.02);
+        }
+
+        .drop-zone p {
+            font-size: 1.2rem;
+            color: #b0c4de;
+            margin-bottom: 10px;
+        }
+
+        .drop-zone .icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+
+        .mapping-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: rgba(20, 40, 80, 0.9);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            backdrop-filter: blur(15px);
+        }
+
+        .panel h2 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #ffd700;
+            padding-bottom: 10px;
+        }
+
+        .mapping-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .mapping-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .mapping-list::-webkit-scrollbar-track {
+            background: rgba(15, 30, 60, 0.6);
+            border-radius: 4px;
+        }
+
+        .mapping-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #ffd700, #1e90ff);
+            border-radius: 4px;
+        }
+
+        .mapping-list::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #1e90ff, #ffd700);
+        }
+
+        .mapping-item {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(15, 30, 60, 0.6);
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+
+        .mapping-item:hover {
+            background: rgba(25, 45, 85, 0.8);
+            transform: translateX(5px);
+            border-color: #ffd700;
+        }
+
+        .mapping-item .excel-field {
+            font-weight: 500;
+            color: #b0c4de;
+        }
+
+        .mapping-item .arrow {
+            margin: 0 15px;
+            color: #ffd700;
+            font-size: 1.2rem;
+        }
+
+        .mapping-item select {
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 8px;
+            background: rgba(15, 30, 60, 0.8);
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+
+        .mapping-item select:hover {
+            border-color: #ffd700;
+        }
+
+        .mapping-item select:focus {
+            outline: none;
+            border-color: #1e90ff;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+            color: #1e3c72;
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 215, 0, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(30, 60, 120, 0.8);
+            color: white;
+            box-shadow: 0 8px 25px rgba(30, 60, 120, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(40, 80, 150, 0.9);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(30, 60, 120, 0.6);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #1e90ff 0%, #4169e1 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(30, 144, 255, 0.4);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(30, 144, 255, 0.6);
+        }
+
+        .output-container {
+            background: rgba(20, 40, 80, 0.9);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            backdrop-filter: blur(15px);
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #1e90ff;
+            padding-bottom: 10px;
+        }
+
+        .output-container h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .schema-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .schema-toggle label {
+            color: #b0c4de;
+            font-weight: 500;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: rgba(30, 60, 120, 0.8);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(30px);
+        }
+
+        .schema-label {
+            color: #ffd700;
+            font-weight: 600;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        pre {
+            background: rgba(15, 30, 60, 0.8);
+            padding: 20px;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        pre::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        pre::-webkit-scrollbar-track {
+            background: rgba(15, 30, 60, 0.6);
+            border-radius: 4px;
+        }
+
+        pre::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #ffd700, #1e90ff);
+            border-radius: 4px;
+        }
+
+        pre::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #1e90ff, #ffd700);
+        }
+
+        /* XML Syntax Highlighting */
+        .xml-tag {
+            color: #ffd700;
+        }
+
+        .xml-attr-name {
+            color: #87ceeb;
+        }
+
+        .xml-attr-value {
+            color: #98fb98;
+        }
+
+        .xml-text {
+            color: #ffa500;
+        }
+
+        .xml-comment {
+            color: #708090;
+            font-style: italic;
+        }
+
+        .xml-declaration {
+            color: #1e90ff;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .row-selector {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(20, 40, 80, 0.8);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .row-selector label {
+            font-weight: 600;
+            margin-right: 10px;
+            color: #b0c4de;
+        }
+
+        .row-selector select {
+            padding: 8px 15px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 8px;
+            background: rgba(15, 30, 60, 0.8);
+            color: #e0e0e0;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .row-selector select:hover {
+            border-color: #ffd700;
+        }
+
+        .row-selector select:focus {
+            outline: none;
+            border-color: #1e90ff;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+        }
+
+        .auto-mapped {
+            background: rgba(26, 61, 46, 0.8) !important;
+            border: 1px solid #2d5a3d;
+        }
+
+        .manual-mapped {
+            background: rgba(61, 58, 26, 0.8) !important;
+            border: 1px solid #5a5a2d;
+        }
+
+        .file-info {
+            background: rgba(20, 40, 80, 0.9);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            backdrop-filter: blur(15px);
+        }
+
+        .file-info span {
+            color: #b0c4de;
+            font-weight: 500;
+        }
+
+        .file-info .filename {
+            color: #ffd700;
+            font-weight: 600;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .btn-primary:active, .btn-success:active {
+            animation: pulse 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+		<div class="header">
+			<img src="https://s14.gifyu.com/images/bTiBS.gif" alt="wbmapper (2)" />
+		</div>
+        
+        <div class="drop-zone" id="dropZone">
+            <div class="icon">📁</div>
+            <p>Drag and drop your Excel file here</p>
+            <p style="font-size: 0.9rem; color: #888;">or click to browse</p>
+            <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+        </div>
+
+        <div id="fileInfo" class="file-info hidden">
+            <span>Current file: <span class="filename" id="currentFileName"></span></span>
+            <button class="btn-secondary" onclick="resetAll()">Load New File</button>
+        </div>
+
+        <div id="mappingSection" class="hidden">
+            <div class="row-selector">
+                <label for="rowSelect">Select Movie:</label>
+                <select id="rowSelect"></select>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="autoMap()">🔄 Auto-Map Fields</button>
+                <button class="btn-secondary" onclick="resetMappings()">↻ Reset</button>
+                <button class="btn-success" onclick="generateXML()">👁 Preview XML</button>
+            </div>
+
+            <div class="mapping-container">
+                <div class="panel fade-in">
+                    <h2>Excel Fields → XML Mapping</h2>
+                    <div class="mapping-list" id="mappingList"></div>
+                </div>
+                
+                <div class="panel fade-in">
+                    <h2>Data Preview</h2>
+                    <div class="mapping-list" id="dataPreview"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="outputSection" class="output-container hidden">
+            <div class="output-header">
+                <h2>Generated XML Output</h2>
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <div class="schema-toggle">
+                        <span class="schema-label">5.2</span>
+                        <div class="toggle-switch active" id="schemaToggle" onclick="toggleSchema()">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        <span class="schema-label">5.3</span>
+                    </div>
+                    <button class="btn-primary" onclick="downloadXML()">💾 Download XML</button>
+                </div>
+            </div>
+            <pre id="xmlOutput"></pre>
+        </div>
+    </div>
+
+    <script>
+        let excelData = [];
+        let headers = [];
+        let currentMappings = {};
+        let generatedXML = '';
+        let processedMovies = [];
+        let currentFileName = '';
+        let schemaVersion = '5.3'; // Default to 5.3
+
+        // Complete Language codes dictionary from RFC5646
+        const LANGUAGE_CODES = {
+            'af': 'Afrikaans',
+            'af-ZA': 'Afrikaans (South Africa)',
+            'ar': 'Arabic',
+            'ar-AE': 'Arabic (U.A.E.)',
+            'ar-BH': 'Arabic (Bahrain)',
+            'ar-DZ': 'Arabic (Algeria)',
+            'ar-EG': 'Arabic (Egypt)',
+            'ar-IQ': 'Arabic (Iraq)',
+            'ar-JO': 'Arabic (Jordan)',
+            'ar-KW': 'Arabic (Kuwait)',
+            'ar-LB': 'Arabic (Lebanon)',
+            'ar-LY': 'Arabic (Libya)',
+            'ar-MA': 'Arabic (Morocco)',
+            'ar-OM': 'Arabic (Oman)',
+            'ar-QA': 'Arabic (Qatar)',
+            'ar-SA': 'Arabic (Saudi Arabia)',
+            'ar-SY': 'Arabic (Syria)',
+            'ar-TN': 'Arabic (Tunisia)',
+            'ar-YE': 'Arabic (Yemen)',
+            'az': 'Azeri (Latin)',
+            'az-AZ': 'Azeri (Latin) (Azerbaijan)',
+            'az-Cyrl-AZ': 'Azeri (Cyrillic) (Azerbaijan)',
+            'be': 'Belarusian',
+            'be-BY': 'Belarusian (Belarus)',
+            'bg': 'Bulgarian',
+            'bg-BG': 'Bulgarian (Bulgaria)',
+            'bs-BA': 'Bosnian (Bosnia and Herzegovina)',
+            'ca': 'Catalan',
+            'ca-ES': 'Catalan (Spain)',
+            'cs': 'Czech',
+            'cs-CZ': 'Czech (Czech Republic)',
+            'cy': 'Welsh',
+            'cy-GB': 'Welsh (United Kingdom)',
+            'da': 'Danish',
+            'da-DK': 'Danish (Denmark)',
+            'de': 'German',
+            'de-AT': 'German (Austria)',
+            'de-CH': 'German (Switzerland)',
+            'de-DE': 'German (Germany)',
+            'de-LI': 'German (Liechtenstein)',
+            'de-LU': 'German (Luxembourg)',
+            'dv': 'Divehi',
+            'dv-MV': 'Divehi (Maldives)',
+            'el': 'Greek',
+            'el-GR': 'Greek (Greece)',
+            'en': 'English',
+            'en-AU': 'English (Australia)',
+            'en-BZ': 'English (Belize)',
+            'en-CA': 'English (Canada)',
+            'en-CB': 'English (Caribbean)',
+            'en-GB': 'English (United Kingdom)',
+            'en-IE': 'English (Ireland)',
+            'en-JM': 'English (Jamaica)',
+            'en-NZ': 'English (New Zealand)',
+            'en-PH': 'English (Republic of the Philippines)',
+            'en-TT': 'English (Trinidad and Tobago)',
+            'en-US': 'English (United States)',
+            'en-ZA': 'English (South Africa)',
+            'en-ZW': 'English (Zimbabwe)',
+            'eo': 'Esperanto',
+            'es': 'Spanish',
+            'es-AR': 'Spanish (Argentina)',
+            'es-BO': 'Spanish (Bolivia)',
+            'es-CL': 'Spanish (Chile)',
+            'es-CO': 'Spanish (Colombia)',
+            'es-CR': 'Spanish (Costa Rica)',
+            'es-DO': 'Spanish (Dominican Republic)',
+            'es-EC': 'Spanish (Ecuador)',
+            'es-ES': 'Spanish (Spain)',
+            'es-GT': 'Spanish (Guatemala)',
+            'es-HN': 'Spanish (Honduras)',
+            'es-MX': 'Spanish (Mexico)',
+            'es-NI': 'Spanish (Nicaragua)',
+            'es-PA': 'Spanish (Panama)',
+            'es-PE': 'Spanish (Peru)',
+            'es-PR': 'Spanish (Puerto Rico)',
+            'es-PY': 'Spanish (Paraguay)',
+            'es-SV': 'Spanish (El Salvador)',
+            'es-UY': 'Spanish (Uruguay)',
+            'es-VE': 'Spanish (Venezuela)',
+            'et': 'Estonian',
+            'et-EE': 'Estonian (Estonia)',
+            'eu': 'Basque',
+            'eu-ES': 'Basque (Spain)',
+            'fa': 'Farsi',
+            'fa-IR': 'Farsi (Iran)',
+            'fi': 'Finnish',
+            'fi-FI': 'Finnish (Finland)',
+            'fo': 'Faroese',
+            'fo-FO': 'Faroese (Faroe Islands)',
+            'fr': 'French',
+            'fr-BE': 'French (Belgium)',
+            'fr-CA': 'French (Canada)',
+            'fr-CH': 'French (Switzerland)',
+            'fr-FR': 'French (France)',
+            'fr-LU': 'French (Luxembourg)',
+            'fr-MC': 'French (Principality of Monaco)',
+            'gl': 'Galician',
+            'gl-ES': 'Galician (Spain)',
+            'gu': 'Gujarati',
+            'gu-IN': 'Gujarati (India)',
+            'he': 'Hebrew',
+            'he-IL': 'Hebrew (Israel)',
+            'hi': 'Hindi',
+            'hi-IN': 'Hindi (India)',
+            'hr': 'Croatian',
+            'hr-BA': 'Croatian (Bosnia and Herzegovina)',
+            'hr-HR': 'Croatian (Croatia)',
+            'hu': 'Hungarian',
+            'hu-HU': 'Hungarian (Hungary)',
+            'hy': 'Armenian',
+            'hy-AM': 'Armenian (Armenia)',
+            'id': 'Indonesian',
+            'id-ID': 'Indonesian (Indonesia)',
+            'is': 'Icelandic',
+            'is-IS': 'Icelandic (Iceland)',
+            'it': 'Italian',
+            'it-CH': 'Italian (Switzerland)',
+            'it-IT': 'Italian (Italy)',
+            'ja': 'Japanese',
+            'ja-JP': 'Japanese (Japan)',
+            'ka': 'Georgian',
+            'ka-GE': 'Georgian (Georgia)',
+            'kk': 'Kazakh',
+            'kk-KZ': 'Kazakh (Kazakhstan)',
+            'kn': 'Kannada',
+            'kn-IN': 'Kannada (India)',
+            'ko': 'Korean',
+            'ko-KR': 'Korean (Korea)',
+            'kok': 'Konkani',
+            'kok-IN': 'Konkani (India)',
+            'ky': 'Kyrgyz',
+            'ky-KG': 'Kyrgyz (Kyrgyzstan)',
+            'lt': 'Lithuanian',
+            'lt-LT': 'Lithuanian (Lithuania)',
+            'lv': 'Latvian',
+            'lv-LV': 'Latvian (Latvia)',
+            'mi': 'Maori',
+            'mi-NZ': 'Maori (New Zealand)',
+            'mk': 'FYRO Macedonian',
+            'mk-MK': 'FYRO Macedonian (Former Yugoslav Republic of Macedonia)',
+            'mn': 'Mongolian',
+            'mn-MN': 'Mongolian (Mongolia)',
+            'mr': 'Marathi',
+            'mr-IN': 'Marathi (India)',
+            'ms': 'Malay',
+            'ms-BN': 'Malay (Brunei Darussalam)',
+            'ms-MY': 'Malay (Malaysia)',
+            'mt': 'Maltese',
+            'mt-MT': 'Maltese (Malta)',
+            'nb': 'Norwegian (Bokmål)',
+            'nb-NO': 'Norwegian (Bokmål) (Norway)',
+            'nl': 'Dutch',
+            'nl-BE': 'Dutch (Belgium)',
+            'nl-NL': 'Dutch (Netherlands)',
+            'nn-NO': 'Norwegian (Nynorsk) (Norway)',
+            'ns': 'Northern Sotho',
+            'ns-ZA': 'Northern Sotho (South Africa)',
+            'pa': 'Punjabi',
+            'pa-IN': 'Punjabi (India)',
+            'pl': 'Polish',
+            'pl-PL': 'Polish (Poland)',
+            'ps': 'Pashto',
+            'ps-AR': 'Pashto (Afghanistan)',
+            'pt': 'Portuguese',
+            'pt-BR': 'Portuguese (Brazil)',
+            'pt-PT': 'Portuguese (Portugal)',
+            'qu': 'Quechua',
+            'qu-BO': 'Quechua (Bolivia)',
+            'qu-EC': 'Quechua (Ecuador)',
+            'qu-PE': 'Quechua (Peru)',
+            'ro': 'Romanian',
+            'ro-RO': 'Romanian (Romania)',
+            'ru': 'Russian',
+            'ru-RU': 'Russian (Russia)',
+            'sa': 'Sanskrit',
+            'sa-IN': 'Sanskrit (India)',
+            'se': 'Sami',
+            'se-FI': 'Sami (Finland)',
+            'se-NO': 'Sami (Norway)',
+            'se-SE': 'Sami (Sweden)',
+            'sk': 'Slovak',
+            'sk-SK': 'Slovak (Slovakia)',
+            'sl': 'Slovenian',
+            'sl-SI': 'Slovenian (Slovenia)',
+            'sq': 'Albanian',
+            'sq-AL': 'Albanian (Albania)',
+            'sr-BA': 'Serbian (Latin) (Bosnia and Herzegovina)',
+            'sr-Cyrl-BA': 'Serbian (Cyrillic) (Bosnia and Herzegovina)',
+            'sr-SP': 'Serbian (Latin) (Serbia and Montenegro)',
+            'sr-Cyrl-SP': 'Serbian (Cyrillic) (Serbia and Montenegro)',
+            'sv': 'Swedish',
+            'sv-FI': 'Swedish (Finland)',
+            'sv-SE': 'Swedish (Sweden)',
+            'sw': 'Swahili',
+            'sw-KE': 'Swahili (Kenya)',
+            'syr': 'Syriac',
+            'syr-SY': 'Syriac (Syria)',
+            'ta': 'Tamil',
+            'ta-IN': 'Tamil (India)',
+            'te': 'Telugu',
+            'te-IN': 'Telugu (India)',
+            'th': 'Thai',
+            'th-TH': 'Thai (Thailand)',
+            'tl': 'Tagalog',
+            'tl-PH': 'Tagalog (Philippines)',
+            'tn': 'Tswana',
+            'tn-ZA': 'Tswana (South Africa)',
+            'tr': 'Turkish',
+            'tr-TR': 'Turkish (Turkey)',
+            'tt': 'Tatar',
+            'tt-RU': 'Tatar (Russia)',
+            'ts': 'Tsonga',
+            'uk': 'Ukrainian',
+            'uk-UA': 'Ukrainian (Ukraine)',
+            'ur': 'Urdu',
+            'ur-PK': 'Urdu (Islamic Republic of Pakistan)',
+            'uz': 'Uzbek (Latin)',
+            'uz-UZ': 'Uzbek (Latin) (Uzbekistan)',
+            'uz-Cyrl-UZ': 'Uzbek (Cyrillic) (Uzbekistan)',
+            'vi': 'Vietnamese',
+            'vi-VN': 'Vietnamese (Viet Nam)',
+            'xh': 'Xhosa',
+            'xh-ZA': 'Xhosa (South Africa)',
+            'zh': 'Chinese',
+            'zh-CN': 'Chinese (S)',
+            'zh-HK': 'Chinese (Hong Kong)',
+            'zh-MO': 'Chinese (Macau)',
+            'zh-SG': 'Chinese (Singapore)',
+            'zh-TW': 'Chinese (T)',
+            'zu': 'Zulu',
+            'zu-ZA': 'Zulu (South Africa)'
+        };
+
+        // Country codes dictionary (ISO 3166)
+        const COUNTRY_CODES = {
+            'FR': 'France',
+            'US': 'United States',
+            'GB': 'United Kingdom',
+            'DE': 'Germany',
+            'ES': 'Spain',
+            'IT': 'Italy',
+            'PT': 'Portugal',
+            'NL': 'Netherlands',
+            'BE': 'Belgium',
+            'CH': 'Switzerland',
+            'CA': 'Canada',
+            'AU': 'Australia',
+            'JP': 'Japan',
+            'CN': 'China',
+            'KR': 'Korea'
+        };
+
+        // Mapping from simple country/language codes to RFC5646 language tags
+        const LOCALE_TO_RFC5646 = {
+            'FR': 'fr-FR',
+            'fr': 'fr-FR',
+            'French': 'fr-FR',
+            'US': 'en-US',
+            'en': 'en-US',
+            'English': 'en-US',
+            'GB': 'en-GB',
+            'UK': 'en-GB',
+            'DE': 'de-DE',
+            'de': 'de-DE',
+            'German': 'de-DE',
+            'ES': 'es-ES',
+            'es': 'es-ES',
+            'Spanish': 'es-ES',
+            'IT': 'it-IT',
+            'it': 'it-IT',
+            'Italian': 'it-IT',
+            'PT': 'pt-PT',
+            'pt': 'pt-PT',
+            'Portuguese': 'pt-PT',
+            'NL': 'nl-NL',
+            'nl': 'nl-NL',
+            'Dutch': 'nl-NL',
+            'BE': 'fr-BE',
+            'be': 'fr-BE',
+            'CH': 'fr-CH',
+            'ch': 'fr-CH',
+            'CA': 'fr-CA',
+            'ca': 'en-CA',
+            'AU': 'en-AU',
+            'au': 'en-AU',
+            'JP': 'ja-JP',
+            'ja': 'ja-JP',
+            'Japanese': 'ja-JP',
+            'CN': 'zh-CN',
+            'zh': 'zh-CN',
+            'Chinese': 'zh-CN',
+            'KR': 'ko-KR',
+            'ko': 'ko-KR',
+            'Korean': 'ko-KR',
+            'PL': 'pl-PL',
+            'pl': 'pl-PL',
+            'Polish': 'pl-PL'
+        };
+
+        // Enhanced Genre codes from iTunes specification
+        const GENRE_CODES = {
+            'Action': 'ACTION-ADVENTURE-00',
+            'Adventure': 'ACTION-ADVENTURE-00',
+            'African': 'AFRICAN-00',
+            'Anime': 'ANIME-00',
+            'Bollywood': 'BOLLYWOOD-00',
+            'Classics': 'CLASSICS-00',
+            'Comedy': 'COMEDY-00',
+            'Comédie': 'COMEDY-00',
+            'Concert Films': 'CONCERT-FILMS-00',
+            'Documentary': 'DOCUMENTARY-00',
+            'Drama': 'DRAMA-00',
+            'Drame': 'DRAMA-00',
+            'Foreign': 'FOREIGN-00',
+            'Holiday': 'HOLIDAY-00',
+            'Horror': 'HORROR-00',
+            'Independent': 'INDEPENDENT-00',
+            'Kids': 'KIDS-FAMILY-00',
+            'Family': 'KIDS-FAMILY-00',
+            'Made for TV': 'MADE-FOR-TV-00',
+            'Middle Eastern': 'MIDDLE-EASTERN-00',
+            'Music Documentary': 'MUSIC-DOCUMENTARIES-00',
+            'Music Feature Film': 'MUSIC-FEATURE-FILMS-00',
+            'Musical': 'MUSICALS-00',
+            'Musicals': 'MUSICALS-00',
+            'Regional Indian': 'REGIONAL-INDIAN-00',
+            'Romance': 'ROMANCE-00',
+            'Russian': 'RUSSIAN-00',
+            'Sci-Fi': 'SCIFI-FANTASY-00',
+            'Fantasy': 'SCIFI-FANTASY-00',
+            'Short Films': 'SHORT-FILMS-00',
+            'Special Interest': 'SPECIAL-INTEREST-00',
+            'Sports': 'SPORTS-00',
+            'Thriller': 'THRILLER-00',
+            'Turkish': 'TURKISH-00',
+            'Urban': 'URBAN-00',
+            'Western': 'WESTERN-00'
+        };
+
+        // Rating codes for France (fr-cnc)
+        const RATING_CODES = {
+            'Tous Publics': 'TP',
+            'TP': 'TP',
+            '-10': '-10',
+            '-12': '-12',
+            '-16': '-16',
+            '-18': '-18',
+            'UR': 'UR'
+        };
+
+        // Columns to ignore in mapping (column indices)
+        const IGNORED_COLUMNS = [
+            19,  // T
+            22,  // W
+            26,  // AA
+            30,  // AE
+            31,  // AF
+            36,  // AK
+            37,  // AL
+            34,  // AI
+            38,  // AM
+            35   // AJ
+        ];
+
+        // XML field definitions with paths and types
+        const xmlFields = {
+            'provider': { path: 'provider', type: 'text' },
+            'language': { path: 'language', type: 'text' },
+            'video_type': { path: 'video/type', type: 'text' },
+            'video_subtype': { path: 'video/subtype', type: 'text' },
+            'vendor_id': { path: 'video/vendor_id', type: 'text' },
+            'country': { path: 'video/countries_of_origin/country', type: 'text', attr: 'primary="true"' },
+            'production_country': { path: 'video/production_countries/country', type: 'text', attr: 'primary="true"' },
+            'original_spoken_locale': { path: 'video/original_spoken_locale', type: 'text' },
+            'title': { path: 'video/title', type: 'text' },
+            'studio_release_title': { path: 'video/studio_release_title', type: 'text' },
+            'synopsis': { path: 'video/synopsis', type: 'text' },
+            'production_company': { path: 'video/production_company', type: 'text' },
+            'copyright': { path: 'video/copyright_cline', type: 'text' },
+            'theatrical_release': { path: 'video/theatrical_release_date', type: 'date' },
+            'genre': { path: 'video/genres/genre', type: 'genre' },
+            'rating': { path: 'video/ratings/rating', type: 'rating' },
+            'cast': { path: 'video/cast', type: 'cast' },
+            'crew': { path: 'video/crew', type: 'crew' },
+            'territory': { path: 'video/products/product/territory', type: 'text' },
+            'cleared_sale': { path: 'video/products/product/cleared_for_sale', type: 'boolean' },
+            'cleared_hd_sale': { path: 'video/products/product/cleared_for_hd_sale', type: 'boolean' },
+            'sales_start': { path: 'video/products/product/sales_start_date', type: 'date' },
+            'sales_end': { path: 'video/products/product/sales_end_date', type: 'date' },
+            'cleared_vod': { path: 'video/products/product/cleared_for_vod', type: 'boolean' },
+            'vod_start': { path: 'video/products/product/available_for_vod_date', type: 'date' },
+            'vod_end': { path: 'video/products/product/unavailable_for_vod_date', type: 'date' },
+            'cleared_hd_vod': { path: 'video/products/product/cleared_for_hd_vod', type: 'boolean' },
+            'physical_release': { path: 'video/products/product/physical_release_date', type: 'date' },
+            'preorder_date': { path: 'video/products/product/preorder_sales_start_date', type: 'date' }
+        };
+
+        // Fixed mappings based on column positions
+        const fixedMappings = {
+            'vendor_id': 4,  // Column E
+            'production_company': 10,  // Column K
+            'preorder_date': 33  // Column AH (Pre Order Date)
+        };
+
+        // Auto-mapping rules for other fields
+        const autoMappingRules = {
+            'language': 'language',
+            'provider': 'provider',
+            'video_type': 'video_type',
+            'video_subtype': 'video_subtype',
+            'country': 'country',
+            'Original_Spoken_Locale': 'original_spoken_locale',
+            'title': 'title',
+            'original title': 'studio_release_title',
+            'synopsis': 'synopsis',
+            'copyright_cline': 'copyright',
+            'theatrical_release_date': 'theatrical_release',
+            'genre': 'genre',
+            'rating': 'rating',
+            'cast': 'cast',
+            'crew': 'crew',
+            'territory': 'territory',
+            'cleared for sale': 'cleared_sale',
+            'Sales stard date': 'sales_start',
+            'Sales end date': 'sales_end',
+            'cleared for vod': 'cleared_vod',
+            'available for vod date': 'vod_start',
+            'unavailable for vod date': 'vod_end',
+            'cleared for hd vod': 'cleared_hd_vod',
+            'France physical release date': 'physical_release'
+        };
+
+        // Toggle schema version
+        function toggleSchema() {
+            const toggle = document.getElementById('schemaToggle');
+            toggle.classList.toggle('active');
+            schemaVersion = toggle.classList.contains('active') ? '5.3' : '5.2';
+            
+            // Regenerate XML if it exists
+            if (generatedXML) {
+                generateXML();
+            }
+        }
+
+        // Function to convert locale to RFC5646 format
+        function toRFC5646Locale(locale) {
+            if (!locale) return '';
+            
+            // Check if it's already in RFC5646 format (contains a hyphen)
+            if (locale.includes('-')) {
+                return locale;
+            }
+            
+            // Try to find mapping
+            const mapped = LOCALE_TO_RFC5646[locale] || LOCALE_TO_RFC5646[locale.toLowerCase()];
+            if (mapped) {
+                return mapped;
+            }
+            
+            // If no mapping found, try to construct one if it looks like a 2-letter code
+            if (locale.length === 2) {
+                const lower = locale.toLowerCase();
+                // Default to the most common country for that language
+                switch(lower) {
+                    case 'fr': return 'fr-FR';
+                    case 'en': return 'en-US';
+                    case 'de': return 'de-DE';
+                    case 'es': return 'es-ES';
+                    case 'it': return 'it-IT';
+                    case 'pt': return 'pt-PT';
+                    case 'nl': return 'nl-NL';
+                    case 'pl': return 'pl-PL';
+                    case 'ru': return 'ru-RU';
+                    case 'ja': return 'ja-JP';
+                    case 'ko': return 'ko-KR';
+                    case 'zh': return 'zh-CN';
+                    default: return locale; // Return as-is if unknown
+                }
+            }
+            
+            return locale; // Return as-is if no conversion possible
+        }
+
+        // Function to convert text to proper title case
+        function toTitleCase(str) {
+            if (!str) return '';
+            return str.replace(/\w\S*/g, function(txt){
+                return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+            });
+        }
+
+        // Function to convert text to proper name case (handles names better)
+        function toProperCase(str) {
+            if (!str) return '';
+            
+            // Preserve accented characters and handle word boundaries better
+            return str.split(/\s+/).map(word => {
+                // Handle hyphenated names
+                if (word.includes('-')) {
+                    return word.split('-').map(part => 
+                        part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+                    ).join('-');
+                }
+                // Handle apostrophes (D'Angelo, O'Brien, etc.)
+                if (word.includes("'")) {
+                    return word.split("'").map(part => 
+                        part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+                    ).join("'");
+                }
+                // Regular word
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            }).join(' ');
+        }
+
+        // Setup drag and drop
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            // Reset data preview and XML output when new file is loaded
+            document.getElementById('dataPreview').innerHTML = '';
+            document.getElementById('xmlOutput').innerHTML = '';
+            document.getElementById('outputSection').classList.add('hidden');
+            generatedXML = '';
+            currentMappings = {};
+            
+            currentFileName = file.name;
+            document.getElementById('currentFileName').textContent = currentFileName;
+            document.getElementById('fileInfo').classList.remove('hidden');
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                if (jsonData.length > 0) {
+                    headers = jsonData[0];
+                    excelData = jsonData.slice(1);
+                    
+                    // Process movies from rows 2-6 (index 1-5 in excelData)
+                    processMoviesFromData();
+                    
+                    populateRowSelector();
+                    displayMappings();
+                    document.getElementById('mappingSection').classList.remove('hidden');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processMoviesFromData() {
+            processedMovies = [];
+            
+            // Look for main data rows (typically row 3, index 2)
+            // Check rows 2-6 for actual movie data
+            for (let i = 1; i <= 5 && i < excelData.length; i++) {
+                const row = excelData[i];
+                // Check if this row has a title (column H, index 7)
+                if (row && row[7]) {
+                    // This is a main movie row
+                    const movie = {
+                        mainRowIndex: i,
+                        title: row[7],
+                        data: row,
+                        crew: []
+                    };
+                    
+                    // IMPORTANT: Check if the main row has a director
+                    if (row[17] && row[18]) { // Column R and S
+                        movie.crew.push({
+                            role: row[17],
+                            names: row[18]
+                        });
+                    }
+                    
+                    // Collect crew from subsequent rows
+                    for (let j = i + 1; j <= i + 4 && j < excelData.length; j++) {
+                        const crewRow = excelData[j];
+                        if (crewRow && crewRow[17] && crewRow[18]) { // Column R has crew role and S has names
+                            movie.crew.push({
+                                role: crewRow[17],
+                                names: crewRow[18]
+                            });
+                        }
+                    }
+                    
+                    processedMovies.push(movie);
+                }
+            }
+        }
+
+        function populateRowSelector() {
+            const select = document.getElementById('rowSelect');
+            select.innerHTML = '';
+            
+            processedMovies.forEach((movie, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = movie.title;
+                select.appendChild(option);
+            });
+            
+            select.addEventListener('change', updateDataPreview);
+        }
+
+        function displayMappings() {
+            const mappingList = document.getElementById('mappingList');
+            mappingList.innerHTML = '';
+            
+            headers.forEach((header, index) => {
+                if (!header) return;
+                
+                // Skip ignored columns
+                if (IGNORED_COLUMNS.includes(index)) return;
+                
+                const item = document.createElement('div');
+                item.className = 'mapping-item';
+                item.dataset.excelField = header;
+                item.dataset.excelIndex = index;
+                
+                const excelField = document.createElement('div');
+                excelField.className = 'excel-field';
+                excelField.textContent = header;
+                
+                const arrow = document.createElement('div');
+                arrow.className = 'arrow';
+                arrow.textContent = '→';
+                
+                const select = document.createElement('select');
+                select.dataset.excelIndex = index;
+                
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '-- Not Mapped --';
+                select.appendChild(defaultOption);
+                
+                Object.keys(xmlFields).forEach(xmlField => {
+                    const option = document.createElement('option');
+                    option.value = xmlField;
+                    option.textContent = xmlField.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    select.appendChild(option);
+                });
+                
+                // Check if this is a fixed mapping
+                const fixedField = Object.keys(fixedMappings).find(key => fixedMappings[key] === index);
+                if (fixedField) {
+                    select.value = fixedField;
+                    currentMappings[index] = fixedField;
+                    item.classList.add('auto-mapped');
+                }
+                
+                select.addEventListener('change', (e) => {
+                    currentMappings[index] = e.target.value;
+                    item.classList.remove('auto-mapped');
+                    item.classList.add('manual-mapped');
+                    updateDataPreview();
+                });
+                
+                item.appendChild(excelField);
+                item.appendChild(arrow);
+                item.appendChild(select);
+                
+                mappingList.appendChild(item);
+            });
+            
+            // Auto-apply fixed mappings
+            autoMapFixed();
+            updateDataPreview();
+        }
+
+        function autoMapFixed() {
+            // Apply fixed mappings
+            Object.entries(fixedMappings).forEach(([xmlField, colIndex]) => {
+                currentMappings[colIndex] = xmlField;
+                const select = document.querySelector(`select[data-excel-index="${colIndex}"]`);
+                if (select) {
+                    select.value = xmlField;
+                    const item = select.closest('.mapping-item');
+                    if (item) {
+                        item.classList.add('auto-mapped');
+                    }
+                }
+            });
+        }
+
+        function autoMap() {
+            const mappingItems = document.querySelectorAll('.mapping-item');
+            
+            // First apply fixed mappings
+            autoMapFixed();
+            
+            // Then apply auto-mapping rules
+            mappingItems.forEach(item => {
+                const excelField = item.dataset.excelField;
+                const index = parseInt(item.dataset.excelIndex);
+                const select = item.querySelector('select');
+                
+                // Skip if already mapped by fixed mapping
+                if (currentMappings[index]) {
+                    return;
+                }
+                
+                if (autoMappingRules[excelField]) {
+                    select.value = autoMappingRules[excelField];
+                    currentMappings[index] = autoMappingRules[excelField];
+                    item.classList.add('auto-mapped');
+                    item.classList.remove('manual-mapped');
+                }
+            });
+            
+            updateDataPreview();
+        }
+
+        function resetMappings() {
+            currentMappings = {};
+            document.querySelectorAll('.mapping-item select').forEach(select => {
+                select.value = '';
+            });
+            document.querySelectorAll('.mapping-item').forEach(item => {
+                item.classList.remove('auto-mapped', 'manual-mapped');
+            });
+            // Clear previews
+            document.getElementById('dataPreview').innerHTML = '';
+            document.getElementById('xmlOutput').innerHTML = '';
+            document.getElementById('outputSection').classList.add('hidden');
+            generatedXML = '';
+            updateDataPreview();
+        }
+
+        function resetAll() {
+            location.reload();
+        }
+
+        function formatDate(dateValue) {
+            if (!dateValue) return '';
+            
+            // Handle Excel date serial number or date string
+            let date;
+            if (typeof dateValue === 'number') {
+                // Excel date serial number
+                date = new Date((dateValue - 25569) * 86400 * 1000);
+            } else if (typeof dateValue === 'string') {
+                // Handle ISO string or other date formats
+                if (dateValue.includes('T')) {
+                    date = new Date(dateValue);
+                } else {
+                    date = new Date(dateValue);
+                }
+            } else {
+                date = dateValue;
+            }
+            
+            // Format as YYYY-MM-DD
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}`;
+        }
+
+        function updateDataPreview() {
+            const movieIndex = document.getElementById('rowSelect').value;
+            const preview = document.getElementById('dataPreview');
+            preview.innerHTML = '';
+            
+            if (!processedMovies[movieIndex]) return;
+            
+            const movie = processedMovies[movieIndex];
+            const row = movie.data;
+            
+            Object.entries(currentMappings).forEach(([excelIndex, xmlField]) => {
+                if (!xmlField) return;
+                
+                const index = parseInt(excelIndex);
+                let value = row[index];
+                
+                if (value !== null && value !== undefined && value !== '') {
+                    // Format dates in preview
+                    if (xmlFields[xmlField] && xmlFields[xmlField].type === 'date') {
+                        value = formatDate(value);
+                    }
+                    
+                    const item = document.createElement('div');
+                    item.className = 'mapping-item';
+                    item.innerHTML = `
+                        <div style="font-weight: 600; color: #ffd700;">${xmlField.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                        <div class="arrow">:</div>
+                        <div style="color: #87ceeb;">${value}</div>
+                    `;
+                    preview.appendChild(item);
+                }
+            });
+            
+            // Add crew preview
+            if (movie.crew.length > 0) {
+                movie.crew.forEach(crewMember => {
+                    if (crewMember.names) {
+                        const item = document.createElement('div');
+                        item.className = 'mapping-item';
+                        item.innerHTML = `
+                            <div style="font-weight: 600; color: #ffd700;">${crewMember.role}</div>
+                            <div class="arrow">:</div>
+                            <div style="color: #87ceeb;">${crewMember.names}</div>
+                        `;
+                        preview.appendChild(item);
+                    }
+                });
+            }
+        }
+
+        function cleanCopyright(copyrightValue) {
+            if (!copyrightValue) return '';
+            
+            // Remove © and @ symbols
+            let cleaned = copyrightValue.replace(/[©@]/g, '').trim();
+            
+            // Remove leading/trailing dashes
+            cleaned = cleaned.replace(/^[-–]+|[-–]+$/g, '').trim();
+            
+            // Split by slash, dash, or emdash to get parts
+            const parts = cleaned.split(/\s*[\/–-]\s*/);
+            
+            // Process each part to apply proper case to production companies
+            const processedParts = parts.map(part => {
+                part = part.trim();
+                
+                // Check if the part starts with a year (4 digits)
+                if (/^\d{4}/.test(part)) {
+                    // Keep the year part, but process the rest if there's more
+                    const yearMatch = part.match(/^(\d{4})\s*(.*)$/);
+                    if (yearMatch) {
+                        const year = yearMatch[1];
+                        const rest = yearMatch[2];
+                        if (rest) {
+                            // Process the rest (company name)
+                            return year + ' ' + formatCompanyName(rest);
+                        }
+                        return year;
+                    }
+                }
+                
+                // It's a company name, format it
+                return formatCompanyName(part);
+            });
+            
+            // Join with ' / ' (spaces around slashes)
+            return processedParts.join(' / ');
+        }
+        
+        function formatCompanyName(name) {
+            if (!name) return '';
+            
+            // List of words that should stay lowercase (unless at the beginning)
+            const lowercaseWords = ['de', 'du', 'et', 'la', 'le', 'les'];
+            
+            // List of known acronyms that should stay uppercase
+            const acronyms = ['TV', 'USA', 'UK', 'BBC', 'HBO', 'ABC', 'CBS', 'NBC'];
+            
+            // Split by spaces
+            const words = name.split(/\s+/);
+            
+            const formatted = words.map((word, index) => {
+                // Check if it's a number
+                if (/^\d+$/.test(word)) {
+                    return word;
+                }
+                
+                // Check if it's a known acronym
+                if (acronyms.includes(word.toUpperCase())) {
+                    return word.toUpperCase();
+                }
+                
+                // Check if it should be lowercase (but not if it's the first word)
+                if (index > 0 && lowercaseWords.includes(word.toLowerCase())) {
+                    return word.toLowerCase();
+                }
+                
+                // Otherwise, apply title case
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            });
+            
+            return formatted.join(' ');
+        }
+
+        function parseGenres(genreValue) {
+            if (!genreValue) return '';
+            
+            // Split genres by line breaks, commas, slashes, "and", or "&"
+            const genreList = genreValue.split(/[\r\n,\/]+|and|&/).map(g => g.trim()).filter(Boolean);
+            let genresXML = '';
+            
+            genreList.forEach(genre => {
+                if (genre) {
+                    // Try to find the genre code
+                    let genreCode = GENRE_CODES[genre];
+                    
+                    // If not found, try with normalized genre name
+                    if (!genreCode) {
+                        const normalizedGenre = genre.charAt(0).toUpperCase() + genre.slice(1).toLowerCase();
+                        genreCode = GENRE_CODES[normalizedGenre];
+                    }
+                    
+                    // Default to the specific genre codes if no match
+                    if (!genreCode) {
+                        // Check for specific common cases
+                        if (genre.toLowerCase() === 'drame' || genre.toLowerCase() === 'drama') {
+                            genreCode = 'DRAMA-00';
+                            genre = 'Drama';
+                        } else if (genre.toLowerCase() === 'thriller') {
+                            genreCode = 'THRILLER-00';
+                            genre = 'Thriller';
+                        } else if (genre.toLowerCase() === 'comédie' || genre.toLowerCase() === 'comedy') {
+                            genreCode = 'COMEDY-00';
+                            genre = 'Comedy';
+                        } else {
+                            // Use the genre as-is if no mapping found
+                            genreCode = genre.toUpperCase().replace(/[^A-Z]/g, '') + '-00';
+                        }
+                    }
+                    
+                    genresXML += `
+      <genre code="${genreCode}">${genre}</genre>`;
+                }
+            });
+            
+            return genresXML;
+        }
+
+        function parseRating(ratingValue) {
+            return RATING_CODES[ratingValue] || 'TP';
+        }
+
+        function parseCast(castValue, useV52Format = false) {
+            if (!castValue) return '';
+            
+            let castXML = '';
+            let castMembers = [];
+            
+            // First, try to parse the comma-separated format: "Name (Character), Name (Character)"
+            // This handles the Diplodocus and Indomptables format
+            if (castValue.includes('(') && castValue.includes(')') && castValue.includes(',')) {
+                // Split by comma that's not inside parentheses
+                const entries = castValue.split(/,(?![^(]*\))/).map(s => s.trim()).filter(Boolean);
+                
+                let allMatchParentheses = true;
+                const tempMembers = [];
+                
+                entries.forEach(entry => {
+                    const match = entry.match(/(.+?)\s*\(([^)]+)\)/);
+                    if (match) {
+                        const actor = toProperCase(match[1].trim());
+                        const character = match[2].trim();
+                        tempMembers.push({ actor, character });
+                    } else {
+                        allMatchParentheses = false;
+                    }
+                });
+                
+                if (allMatchParentheses && tempMembers.length > 0) {
+                    castMembers = tempMembers;
+                }
+            }
+            
+            // If no cast members found yet, try other formats
+            if (castMembers.length === 0) {
+                // Split by line breaks or 3+ spaces
+                const entries = castValue.split(/[\r\n]+|\s{3,}/).filter(Boolean);
+                
+                entries.forEach(entry => {
+                    let actor = '', character = '';
+                    
+                    // Check for format: "Name … Character" (with three dots/ellipsis)
+                    if (entry.includes('…')) {
+                        const parts = entry.split('…').map(s => s.trim());
+                        if (parts.length >= 2) {
+                            actor = toProperCase(parts[0]);
+                            character = parts[1];
+                            castMembers.push({ actor, character });
+                        }
+                    }
+                    // Check for format: "Name...Character" (three dots without spaces)
+                    else if (entry.includes('...')) {
+                        const parts = entry.split('...').map(s => s.trim());
+                        if (parts.length >= 2) {
+                            actor = toProperCase(parts[0]);
+                            character = parts[1];
+                            castMembers.push({ actor, character });
+                        }
+                    }
+                    // Check for format: "Name (Role)" with parentheses
+                    else if (entry.includes('(') && entry.includes(')')) {
+                        const match = entry.match(/(.+?)\s*\(([^)]+)\)/);
+                        if (match) {
+                            actor = toProperCase(match[1].trim());
+                            character = match[2].trim();
+                            castMembers.push({ actor, character });
+                        }
+                    } 
+                    // Check for format: "Name : Role" with colon
+                    else if (entry.includes(':')) {
+                        const parts = entry.split(':').map(s => s.trim());
+                        if (parts.length >= 2) {
+                            actor = toProperCase(parts[0]);
+                            character = parts[1];
+                            castMembers.push({ actor, character });
+                        }
+                    }
+                    // If no separator found, treat it as just an actor name with no character
+                    else if (entry.trim()) {
+                        actor = toProperCase(entry.trim());
+                        character = ''; // Empty character name
+                        castMembers.push({ actor, character });
+                    }
+                });
+            }
+            
+            // Generate XML based on schema version
+            castMembers.forEach(member => {
+                if (useV52Format) {
+                    // 5.2 format - simpler structure
+                    castXML += `
+      <cast_member>
+        <display_name>${member.actor}</display_name>
+        <character_name>${member.character || ''}</character_name>
+      </cast_member>`;
+                } else {
+                    // 5.3 format - with characters wrapper
+                    if (member.character) {
+                        castXML += `
+      <cast_member>
+        <display_name>${member.actor}</display_name>
+        <characters>
+          <character>
+            <reference_id>${member.character.toUpperCase().replace(/\s+/g, '_')}</reference_id>
+            <character_name>${member.character}</character_name>
+          </character>
+        </characters>
+      </cast_member>`;
+                    } else {
+                        // For cast members without character names
+                        castXML += `
+      <cast_member>
+        <display_name>${member.actor}</display_name>
+        <characters>
+          <character>
+            <reference_id></reference_id>
+            <character_name></character_name>
+          </character>
+        </characters>
+      </cast_member>`;
+                    }
+                }
+            });
+            
+            return castXML;
+        }
+
+        function parseCrew(crewData) {
+            if (!crewData || crewData.length === 0) return '';
+            
+            // Map French roles to English
+            const roleMap = {
+                'Réalisateur': 'Director',
+                'Scénariste': 'Writer',
+                'Producteur': 'Producer',
+                'Producteurs Exécutifs': 'Executive Producer'
+            };
+            
+            // List of production company indicators
+            const productionIndicators = ['Productions', 'Production', 'Films', 'Studio', 'Entertainment', 'Pictures', 'PRODUCTIONS'];
+            
+            // Aggregate crew members by name
+            const crewByName = {};
+            
+            crewData.forEach(crewEntry => {
+                if (!crewEntry.names) return;
+                
+                const englishRole = roleMap[crewEntry.role] || crewEntry.role;
+                
+                // Split the names by line breaks first
+                const lines = crewEntry.names.split(/[\r\n]+/).filter(line => line.trim() !== '');
+                
+                lines.forEach(line => {
+                    line = line.trim();
+                    if (!line) return;
+                    
+                    // Parse names more carefully
+                    // Look for production company patterns to remove them
+                    let cleanedLine = line;
+                    productionIndicators.forEach(indicator => {
+                        // Remove company names that contain these indicators
+                        const companyPattern = new RegExp(`\\b[A-ZÀ-Ü][\\w\\s]*${indicator}\\b`, 'gi');
+                        cleanedLine = cleanedLine.replace(companyPattern, '').trim();
+                    });
+                    
+                    // Now parse the remaining names
+                    // Check if there are multiple names concatenated
+                    // Pattern: FirstName LastName FirstName LastName
+                    const nameWords = cleanedLine.split(/\s+/);
+                    
+                    // Try to intelligently split into individual names
+                    const extractedNames = [];
+                    
+                    // If there's a comma, split by comma
+                    if (cleanedLine.includes(',')) {
+                        const commaSplit = cleanedLine.split(',').map(s => s.trim()).filter(Boolean);
+                        extractedNames.push(...commaSplit);
+                    }
+                    // Check for pattern like "Raphaële Moussafir Stéphane Kazandjan"
+                    // We need to identify where one name ends and another begins
+                    else if (nameWords.length >= 4) {
+                        // Try to find name boundaries by looking for typical first name/last name patterns
+                        // This is heuristic-based
+                        let currentName = [];
+                        
+                        for (let i = 0; i < nameWords.length; i++) {
+                            const word = nameWords[i];
+                            currentName.push(word);
+                            
+                            // Check if the next word looks like it starts a new name
+                            // (starts with capital and current name already has 2 words)
+                            if (i < nameWords.length - 1) {
+                                const nextWord = nameWords[i + 1];
+                                const isNextCapitalized = /^[A-ZÀ-Ü]/.test(nextWord);
+                                
+                                // If we have at least 2 words and the next is capitalized,
+                                // it might be a new name
+                                if (currentName.length >= 2 && isNextCapitalized) {
+                                    // Check if this looks complete
+                                    // Common pattern: FirstName LastName
+                                    extractedNames.push(currentName.join(' '));
+                                    currentName = [];
+                                }
+                            }
+                        }
+                        
+                        // Add any remaining words as the last name
+                        if (currentName.length > 0) {
+                            extractedNames.push(currentName.join(' '));
+                        }
+                    }
+                    // Otherwise treat as single name
+                    else {
+                        extractedNames.push(cleanedLine);
+                    }
+                    
+                    // Process each extracted name
+                    extractedNames.forEach(name => {
+                        name = name.trim();
+                        if (!name || isAllCaps(name)) return;
+                        
+                        // Apply proper case to names
+                        const properName = toProperCase(name);
+                        
+                        if (!crewByName[properName]) {
+                            crewByName[properName] = [];
+                        }
+                        if (!crewByName[properName].includes(englishRole)) {
+                            crewByName[properName].push(englishRole);
+                        }
+                    });
+                });
+            });
+            
+            // Build XML with aggregated roles
+            let crewXML = '';
+            Object.entries(crewByName).forEach(([name, roles]) => {
+                crewXML += `
+      <crew_member>
+        <display_name>${name}</display_name>
+        <roles>`;
+                roles.forEach(role => {
+                    crewXML += `
+          <role>${role}</role>`;
+                });
+                crewXML += `
+        </roles>
+      </crew_member>`;
+            });
+            
+            return crewXML;
+        }
+
+        function isAllCaps(str) {
+            // Check if string is all uppercase (excluding spaces and special characters)
+            const letters = str.replace(/[^a-zA-ZÀ-ÿ]/g, '');
+            return letters.length > 0 && letters === letters.toUpperCase();
+        }
+
+        function escapeXml(unsafe) {
+            return unsafe.replace(/[<>&'"]/g, function (c) {
+                switch (c) {
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '&': return '&amp;';
+                    case '\'': return '&apos;';
+                    case '"': return '&quot;';
+                }
+            });
+        }
+
+        function highlightXML(xml) {
+            // Escape HTML entities first
+            let highlighted = xml
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            
+            // Add syntax highlighting
+            highlighted = highlighted
+                // XML declaration
+                .replace(/(&lt;\?xml.*?\?&gt;)/g, '<span class="xml-declaration">$1</span>')
+                // Comments
+                .replace(/(&lt;!--.*?--&gt;)/g, '<span class="xml-comment">$1</span>')
+                // Tags with attributes
+                .replace(/(&lt;\/?)([a-zA-Z_][\w:.-]*)((?:\s+[a-zA-Z_][\w:.-]*(?:\s*=\s*"[^"]*")?)*\s*)(&gt;)/g, 
+                    function(match, open, tag, attrs, close) {
+                        // Highlight attributes within the tag
+                        if (attrs) {
+                            attrs = attrs.replace(/([a-zA-Z_][\w:.-]*)(\s*=\s*)"([^"]*)"/g, 
+                                '<span class="xml-attr-name">$1</span>$2<span class="xml-attr-value">"$3"</span>');
+                        }
+                        return '<span class="xml-tag">' + open + tag + '</span>' + attrs + '<span class="xml-tag">' + close + '</span>';
+                    })
+                // Text content between tags
+                .replace(/(&gt;)([^&<]+)(&lt;)/g, '$1<span class="xml-text">$2</span>$3');
+            
+            return highlighted;
+        }
+
+        function generateXML() {
+            const movieIndex = document.getElementById('rowSelect').value;
+            const movie = processedMovies[movieIndex];
+            
+            if (!movie) return;
+            
+            const row = movie.data;
+            
+            const getValue = (index) => {
+                return row[index] || '';
+            };
+            
+            const getMappedValue = (xmlField) => {
+                const index = Object.keys(currentMappings).find(key => currentMappings[key] === xmlField);
+                if (!index) return '';
+                return getValue(parseInt(index));
+            };
+            
+            // Get title and apply proper case if all caps
+            let title = getMappedValue('title');
+            if (title && isAllCaps(title)) {
+                title = toTitleCase(title);
+            }
+            
+            // Get studio release title
+            let studioTitle = getMappedValue('studio_release_title') || title;
+            if (studioTitle && isAllCaps(studioTitle)) {
+                studioTitle = toTitleCase(studioTitle);
+            }
+            
+            // Get original spoken locale and convert to RFC5646 format
+            let originalSpokenLocale = getMappedValue('original_spoken_locale') || getMappedValue('language');
+            originalSpokenLocale = toRFC5646Locale(originalSpokenLocale);
+            
+            // Check production company - skip if all caps
+            let productionCompany = getMappedValue('production_company');
+            if (productionCompany && isAllCaps(productionCompany)) {
+                productionCompany = '';
+            }
+            
+            // Build crew XML from collected crew data
+            const crewXML = parseCrew(movie.crew);
+            
+            // Get preorder date
+            const preorderDate = getMappedValue('preorder_date');
+            
+            // Get country value
+            const country = getMappedValue('country');
+            
+            // Generate different XML based on schema version
+            let xml = '';
+            if (schemaVersion === '5.2') {
+                // Version 5.2 format
+                xml = `<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://apple.com/itunes/importer" version="film5.2">
+  <provider>${getMappedValue('provider')}</provider>
+  <language>${getMappedValue('language')}</language>
+  <video>
+    <type>${getMappedValue('video_type')}</type>
+    <subtype>${getMappedValue('video_subtype')}</subtype>
+    <vendor_id>${getMappedValue('vendor_id')}</vendor_id>
+    <isan></isan>
+    <country>${country}</country>
+    <original_spoken_locale>${originalSpokenLocale}</original_spoken_locale>
+    <title>${title}</title>
+    <studio_release_title>${studioTitle}</studio_release_title>
+    <synopsis>${getMappedValue('synopsis')}</synopsis>${productionCompany ? `
+    <production_company>${productionCompany}</production_company>` : ''}
+    <copyright_cline>${cleanCopyright(getMappedValue('copyright'))}</copyright_cline>
+    <theatrical_release_date>${formatDate(getMappedValue('theatrical_release'))}</theatrical_release_date>
+    <genres>${parseGenres(getMappedValue('genre'))}
+    </genres>
+    <ratings>
+      <rating system="fr-cnc" code="${parseRating(getMappedValue('rating'))}"/>
+    </ratings>
+    <regions>
+      <region>
+        <territory>${getMappedValue('territory')}</territory>
+        <theatrical_release_date>${formatDate(getMappedValue('theatrical_release'))}</theatrical_release_date>
+      </region>
+    </regions>
+    <cast>${parseCast(getMappedValue('cast'), true)}
+    </cast>
+    <crew>${crewXML}
+    </crew>
+    <products>
+      <product>
+        <territory>${getMappedValue('territory')}</territory>
+        <cleared_for_sale>${getMappedValue('cleared_sale') || 'true'}</cleared_for_sale>
+        <cleared_for_hd_sale>${getMappedValue('cleared_sale') || 'true'}</cleared_for_hd_sale>
+        <wholesale_price_tier>8</wholesale_price_tier>
+        <hd_wholesale_price_tier>108</hd_wholesale_price_tier>${preorderDate ? `
+        <preorder_sales_start_date>${formatDate(preorderDate)}</preorder_sales_start_date>` : ''}
+        <sales_start_date>${formatDate(getMappedValue('sales_start'))}</sales_start_date>
+        <sales_end_date>${formatDate(getMappedValue('sales_end'))}</sales_end_date>
+        <cleared_for_vod>${getMappedValue('cleared_vod') || 'true'}</cleared_for_vod>
+        <vod_type>Tier 2</vod_type>
+        <available_for_vod_date>${formatDate(getMappedValue('vod_start'))}</available_for_vod_date>
+        <unavailable_for_vod_date>${formatDate(getMappedValue('vod_end'))}</unavailable_for_vod_date>
+        <cleared_for_hd_vod>${getMappedValue('cleared_hd_vod') || 'true'}</cleared_for_hd_vod>
+        <physical_release_date>${formatDate(getMappedValue('physical_release'))}</physical_release_date>
+      </product>
+    </products>
+  </video>
+</package>`;
+            } else {
+                // Version 5.3 format (default)
+                xml = `<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://apple.com/itunes/importer" version="film5.3">
+  <provider>${getMappedValue('provider')}</provider>
+  <language>${getMappedValue('language')}</language>
+  <video>
+    <type>${getMappedValue('video_type')}</type>
+    <subtype>${getMappedValue('video_subtype')}</subtype>
+    <vendor_id>${getMappedValue('vendor_id')}</vendor_id>
+    <isan></isan>
+    <countries_of_origin>
+      <country primary="true">${country}</country>
+    </countries_of_origin>
+    <production_countries>
+      <country primary="true">${country}</country>
+    </production_countries>
+    <original_spoken_locale>${originalSpokenLocale}</original_spoken_locale>
+    <title>${title}</title>
+    <studio_release_title>${studioTitle}</studio_release_title>
+    <synopsis>${getMappedValue('synopsis')}</synopsis>${productionCompany ? `
+    <production_company>${productionCompany}</production_company>` : ''}
+    <copyright_cline>${cleanCopyright(getMappedValue('copyright'))}</copyright_cline>
+    <theatrical_release_date>${formatDate(getMappedValue('theatrical_release'))}</theatrical_release_date>
+    <genres>${parseGenres(getMappedValue('genre'))}
+    </genres>
+    <ratings>
+      <rating system="fr-cnc" code="${parseRating(getMappedValue('rating'))}"/>
+    </ratings>
+    <regions>
+      <region>
+        <territory>${getMappedValue('territory')}</territory>
+        <theatrical_release_date>${formatDate(getMappedValue('theatrical_release'))}</theatrical_release_date>
+      </region>
+    </regions>
+    <cast>${parseCast(getMappedValue('cast'), false)}
+    </cast>
+    <crew>${crewXML}
+    </crew>
+    <products>
+      <product>
+        <territory>${getMappedValue('territory')}</territory>
+        <cleared_for_sale>${getMappedValue('cleared_sale') || 'true'}</cleared_for_sale>
+        <cleared_for_hd_sale>${getMappedValue('cleared_sale') || 'true'}</cleared_for_hd_sale>
+        <wholesale_price_tier>8</wholesale_price_tier>
+        <hd_wholesale_price_tier>108</hd_wholesale_price_tier>${preorderDate ? `
+        <preorder_sales_start_date>${formatDate(preorderDate)}</preorder_sales_start_date>` : ''}
+        <sales_start_date>${formatDate(getMappedValue('sales_start'))}</sales_start_date>
+        <sales_end_date>${formatDate(getMappedValue('sales_end'))}</sales_end_date>
+        <cleared_for_vod>${getMappedValue('cleared_vod') || 'true'}</cleared_for_vod>
+        <vod_type>Tier 2</vod_type>
+        <available_for_vod_date>${formatDate(getMappedValue('vod_start'))}</available_for_vod_date>
+        <unavailable_for_vod_date>${formatDate(getMappedValue('vod_end'))}</unavailable_for_vod_date>
+        <cleared_for_hd_vod>${getMappedValue('cleared_hd_vod') || 'true'}</cleared_for_hd_vod>
+        <physical_release_date>${formatDate(getMappedValue('physical_release'))}</physical_release_date>
+      </product>
+    </products>
+  </video>
+</package>`;
+            }
+            
+            generatedXML = xml;
+            // Apply syntax highlighting
+            document.getElementById('xmlOutput').innerHTML = highlightXML(xml);
+            document.getElementById('outputSection').classList.remove('hidden');
+            
+            // Scroll to output
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function downloadXML() {
+            if (!generatedXML) return;
+            
+            const blob = new Blob([generatedXML], { type: 'text/xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            // Get the metadata for filename
+            const movieIndex = document.getElementById('rowSelect').value;
+            const movie = processedMovies[movieIndex];
+            const row = movie.data;
+            
+            const provider = row[1] || 'Provider'; // Column B
+            const vendorId = row[4] || 'VendorID'; // Column E
+            const title = movie.title || 'metadata';
+            
+            // Format: Provider_vendorID_Title_metadata.xml
+            a.download = `${provider}_${vendorId}_${title.replace(/[^a-z0-9]/gi, '_')}_metadata.xml`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
