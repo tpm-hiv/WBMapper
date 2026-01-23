@@ -1,0 +1,3774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warner Mapper / turns 💩 into 🍏 </title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --bg-primary: #0a0f1a;
+            --bg-secondary: #0d1525;
+            --bg-card: #111827;
+            --bg-card-hover: #1a2337;
+            --accent-blue: #3b82f6;
+            --accent-blue-light: #60a5fa;
+            --accent-blue-glow: rgba(59, 130, 246, 0.5);
+            --accent-yellow: #fbbf24;
+            --accent-yellow-light: #fcd34d;
+            --accent-yellow-glow: rgba(251, 191, 36, 0.5);
+            --accent-orange: #f59e0b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(251, 191, 36, 0.3);
+            --success-green: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(ellipse at 10% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 80%, rgba(251, 191, 36, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 70%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* Animated particle background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, rgba(251, 191, 36, 0.6), transparent),
+                radial-gradient(1.5px 1.5px at 40px 70px, rgba(59, 130, 246, 0.55), transparent),
+                radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 255, 0.5), transparent),
+                radial-gradient(2px 2px at 130px 80px, rgba(251, 191, 36, 0.55), transparent),
+                radial-gradient(1.5px 1.5px at 160px 120px, rgba(59, 130, 246, 0.6), transparent),
+                radial-gradient(1px 1px at 60px 140px, rgba(255, 255, 255, 0.45), transparent),
+                radial-gradient(1.5px 1.5px at 100px 160px, rgba(251, 191, 36, 0.5), transparent),
+                radial-gradient(2px 2px at 180px 50px, rgba(59, 130, 246, 0.5), transparent),
+                radial-gradient(1px 1px at 15px 90px, rgba(251, 191, 36, 0.55), transparent),
+                radial-gradient(1.5px 1.5px at 75px 110px, rgba(59, 130, 246, 0.5), transparent),
+                radial-gradient(2px 2px at 140px 25px, rgba(255, 255, 255, 0.45), transparent),
+                radial-gradient(1px 1px at 195px 145px, rgba(251, 191, 36, 0.6), transparent);
+            background-size: 200px 200px;
+            animation: particleDrift1 30s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.7;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(1.5px 1.5px at 80px 20px, rgba(251, 191, 36, 0.55), transparent),
+                radial-gradient(1px 1px at 120px 90px, rgba(59, 130, 246, 0.5), transparent),
+                radial-gradient(2px 2px at 30px 150px, rgba(255, 255, 255, 0.45), transparent),
+                radial-gradient(1.5px 1.5px at 170px 130px, rgba(251, 191, 36, 0.6), transparent),
+                radial-gradient(1px 1px at 50px 60px, rgba(59, 130, 246, 0.55), transparent),
+                radial-gradient(2px 2px at 110px 45px, rgba(255, 255, 255, 0.5), transparent),
+                radial-gradient(1.5px 1.5px at 25px 180px, rgba(251, 191, 36, 0.5), transparent),
+                radial-gradient(1px 1px at 150px 70px, rgba(59, 130, 246, 0.6), transparent),
+                radial-gradient(1.5px 1.5px at 85px 175px, rgba(255, 255, 255, 0.45), transparent),
+                radial-gradient(2px 2px at 190px 100px, rgba(251, 191, 36, 0.55), transparent);
+            background-size: 250px 250px;
+            animation: particleDrift2 40s ease-in-out infinite alternate-reverse;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        @keyframes particleDrift1 {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(15px, -20px); }
+            50% { transform: translate(-10px, 15px); }
+            75% { transform: translate(20px, 10px); }
+            100% { transform: translate(-15px, -15px); }
+        }
+
+        @keyframes particleDrift2 {
+            0% { transform: translate(0, 0); }
+            33% { transform: translate(-20px, 15px); }
+            66% { transform: translate(15px, -10px); }
+            100% { transform: translate(-10px, 20px); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            margin-bottom: 40px;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0 0 40px rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--border-color);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .header:hover {
+            box-shadow: 
+                0 30px 60px -15px rgba(0, 0, 0, 0.6),
+                0 0 60px rgba(251, 191, 36, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .header img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+        }
+
+        /* Drop Zone */
+        .drop-zone {
+            background: linear-gradient(145deg, var(--bg-card), var(--bg-secondary));
+            border: 2px dashed var(--accent-yellow);
+            border-radius: 20px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 30px;
+            box-shadow: 
+                0 20px 40px -10px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drop-zone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .drop-zone:hover::before {
+            left: 100%;
+        }
+
+        .drop-zone:hover {
+            border-color: var(--accent-blue);
+            background: linear-gradient(145deg, var(--bg-card-hover), var(--bg-card));
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 
+                0 30px 60px -15px rgba(0, 0, 0, 0.5),
+                0 0 40px var(--accent-blue-glow);
+        }
+
+        .drop-zone.dragover {
+            background: linear-gradient(145deg, rgba(59, 130, 246, 0.15), var(--bg-card));
+            border-color: var(--accent-blue-light);
+            transform: scale(1.02);
+            box-shadow: 
+                0 35px 70px -20px rgba(0, 0, 0, 0.6),
+                0 0 60px var(--accent-blue-glow);
+        }
+
+        .drop-zone p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .drop-zone .icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px var(--accent-yellow-glow));
+            animation: iconFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes iconFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* Panels */
+        .mapping-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: linear-gradient(145deg, var(--bg-card), var(--bg-secondary));
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 
+                0 20px 40px -10px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-yellow), var(--accent-blue));
+            background-size: 200% 100%;
+            animation: borderGlow 3s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .panel:hover::before {
+            opacity: 1;
+        }
+
+        .panel:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 25px 50px -15px rgba(0, 0, 0, 0.5),
+                0 0 30px rgba(59, 130, 246, 0.1);
+        }
+
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        .panel h2 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(180deg, var(--accent-yellow), var(--accent-blue));
+            border-radius: 2px;
+        }
+
+        /* Movie Poster Panel */
+        .poster-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .poster-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 450px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            padding: 20px;
+        }
+
+        .poster-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 40px;
+        }
+
+        .poster-placeholder .poster-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .poster-placeholder p {
+            font-size: 0.95rem;
+        }
+
+        .poster-image {
+            max-width: calc(100% - 20px);
+            max-height: 480px;
+            width: auto;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .poster-image:hover {
+            transform: scale(1.03);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 30px var(--accent-blue-glow);
+        }
+
+        .poster-link {
+            display: block;
+            text-decoration: none;
+        }
+
+        .poster-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            color: var(--text-secondary);
+        }
+
+        .poster-loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg-card);
+            border-top-color: var(--accent-yellow);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .poster-error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 40px;
+        }
+
+        .poster-error .error-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .movie-info {
+            margin-top: 10px;
+            text-align: center;
+            padding: 5px 10px;
+        }
+
+        .movie-info .movie-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 3px;
+        }
+
+        .movie-info .movie-year {
+            font-size: 0.85rem;
+            color: var(--accent-yellow);
+        }
+
+        /* Cast & Crew Validation */
+        .validation-list {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .validation-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .validation-list::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 3px;
+        }
+
+        .validation-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent-yellow), var(--accent-blue));
+            border-radius: 3px;
+        }
+
+        .validation-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 50px 40px;
+            gap: 15px;
+        }
+
+        .validation-placeholder .validation-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .validation-placeholder .tmdb-logo {
+            width: 80px;
+            height: auto;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+
+        .validation-placeholder p {
+            font-size: 0.9rem;
+            margin: 5px 0 15px 0;
+        }
+
+        .validation-btn-main {
+            padding: 10px 24px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .validation-btn-main:hover:not(:disabled) {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-blue);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+        }
+
+        .validation-btn-main:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .validation-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.25s ease;
+        }
+
+        .validation-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .validation-item.valid {
+            border-color: rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.03);
+        }
+
+        .validation-item.valid:hover {
+            border-color: rgba(16, 185, 129, 0.5);
+            background: rgba(16, 185, 129, 0.06);
+            box-shadow: 0 2px 12px rgba(16, 185, 129, 0.1);
+        }
+
+        .validation-item.invalid {
+            border-color: rgba(245, 158, 11, 0.3);
+            background: rgba(245, 158, 11, 0.03);
+        }
+
+        .validation-item.invalid:hover {
+            border-color: rgba(245, 158, 11, 0.5);
+            background: rgba(245, 158, 11, 0.06);
+            box-shadow: 0 2px 12px rgba(245, 158, 11, 0.1);
+        }
+
+        .validation-item.not-found {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.03);
+        }
+
+        .validation-item.not-found:hover {
+            border-color: rgba(239, 68, 68, 0.5);
+            background: rgba(239, 68, 68, 0.06);
+            box-shadow: 0 2px 12px rgba(239, 68, 68, 0.1);
+        }
+
+        .validation-item.accent-warning {
+            border-color: rgba(139, 92, 246, 0.3);
+            background: rgba(139, 92, 246, 0.03);
+        }
+
+        .validation-item.accent-warning:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            background: rgba(139, 92, 246, 0.06);
+            box-shadow: 0 2px 12px rgba(139, 92, 246, 0.1);
+        }
+
+        .validation-item.role-warning {
+            border-color: rgba(251, 191, 36, 0.3);
+            background: rgba(251, 191, 36, 0.03);
+        }
+
+        .validation-item.role-warning:hover {
+            border-color: rgba(251, 191, 36, 0.5);
+            background: rgba(251, 191, 36, 0.06);
+            box-shadow: 0 2px 12px rgba(251, 191, 36, 0.1);
+        }
+
+        .validation-status {
+            font-size: 1rem;
+            flex-shrink: 0;
+            width: 24px;
+            text-align: center;
+        }
+
+        .validation-name {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .validation-name .excel-name {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .validation-name .tmdb-name {
+            color: #8b5cf6;
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+
+        .validation-name .tmdb-match {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-top: 2px;
+            opacity: 0.7;
+        }
+
+        .validation-name .tmdb-role {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            opacity: 0.6;
+        }
+
+        .validation-name .tmdb-role-diff {
+            color: #fbbf24;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .validation-name .character-name {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-style: italic;
+            margin-top: 2px;
+        }
+
+        .validation-name .role {
+            color: var(--accent-blue);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .role-tag {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            vertical-align: middle;
+        }
+
+        .status-ok {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1.5px solid rgba(16, 185, 129, 0.5);
+            color: #10b981;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .validation-action {
+            flex-shrink: 0;
+        }
+
+        .validation-btn {
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .validation-btn.fix {
+            background: rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .validation-btn.fix:hover {
+            background: rgba(139, 92, 246, 0.4);
+            border-color: #8b5cf6;
+        }
+
+        .validation-btn.delete {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .validation-btn.delete:hover {
+            background: rgba(239, 68, 68, 0.4);
+            border-color: #ef4444;
+        }
+
+        .validation-btn.applied {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            cursor: default;
+        }
+
+        .validation-section {
+            margin-bottom: 15px;
+        }
+
+        .validation-section-title {
+            font-size: 0.8rem;
+            color: var(--accent-yellow);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            padding-left: 5px;
+        }
+
+        .validation-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .validation-loading .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--bg-card);
+            border-top-color: var(--accent-yellow);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Scrollbar */
+        .mapping-list {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .mapping-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .mapping-list::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 3px;
+        }
+
+        .mapping-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent-yellow), var(--accent-blue));
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .mapping-list::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--accent-blue), var(--accent-yellow));
+        }
+
+        /* Mapping Items */
+        .mapping-item {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            position: relative;
+        }
+
+        .mapping-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 10px;
+            padding: 1px;
+            background: linear-gradient(135deg, transparent, transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mapping-item:hover {
+            background: var(--bg-card-hover);
+            transform: translateX(8px);
+            border-color: var(--accent-yellow);
+            box-shadow: 0 4px 20px rgba(251, 191, 36, 0.15);
+        }
+
+        .mapping-item:hover::after {
+            background: linear-gradient(135deg, var(--accent-yellow), var(--accent-blue));
+            opacity: 1;
+        }
+
+        .mapping-item .excel-field {
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .mapping-item .arrow {
+            margin: 0 12px;
+            color: var(--accent-yellow);
+            font-size: 1.1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .mapping-item:hover .arrow {
+            transform: translateX(3px);
+            text-shadow: 0 0 10px var(--accent-yellow-glow);
+        }
+
+        .mapping-item select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-size: 0.85rem;
+            font-family: inherit;
+        }
+
+        .mapping-item select:hover {
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+        }
+
+        .mapping-item select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px var(--accent-blue-glow);
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 14px 32px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            position: relative;
+            overflow: hidden;
+            font-family: inherit;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        button:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
+            color: var(--bg-primary);
+            box-shadow: 
+                0 8px 30px rgba(251, 191, 36, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 
+                0 15px 40px rgba(251, 191, 36, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-2px) scale(1.01);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(145deg, var(--bg-card), var(--bg-secondary));
+            color: var(--text-primary);
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(145deg, var(--bg-card-hover), var(--bg-card));
+            transform: translateY(-4px);
+            box-shadow: 
+                0 15px 35px rgba(0, 0, 0, 0.4),
+                0 0 20px rgba(59, 130, 246, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            border-color: var(--accent-blue);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 
+                0 8px 30px var(--accent-blue-glow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 
+                0 15px 40px rgba(59, 130, 246, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            filter: brightness(1.1);
+        }
+
+        /* Output Container */
+        .output-container {
+            background: linear-gradient(145deg, var(--bg-card), var(--bg-secondary));
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 
+                0 20px 40px -10px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .output-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-yellow));
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .output-container h2 {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .output-container h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(180deg, var(--accent-blue), var(--accent-yellow));
+            border-radius: 2px;
+        }
+
+        /* Toggle Switch */
+        .schema-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 56px;
+            height: 28px;
+            background: var(--bg-secondary);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-color);
+        }
+
+        .toggle-switch:hover {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 15px var(--accent-blue-glow);
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, var(--accent-yellow), var(--accent-orange));
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 20px var(--accent-yellow-glow);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(28px);
+        }
+
+        .schema-label {
+            color: var(--accent-yellow);
+            font-weight: 600;
+            min-width: 35px;
+            text-align: center;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .schema-label:first-of-type {
+            color: var(--text-muted);
+        }
+
+        .toggle-switch.active ~ .schema-label:last-of-type {
+            text-shadow: 0 0 10px var(--accent-yellow-glow);
+        }
+
+        /* Code Preview */
+        pre {
+            background: var(--bg-primary);
+            padding: 20px;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            max-height: 600px;
+            overflow-y: auto;
+            white-space: pre;
+            word-wrap: normal;
+        }
+
+        pre::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        pre::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 3px;
+        }
+
+        pre::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent-blue), var(--accent-yellow));
+            border-radius: 3px;
+        }
+
+        /* XML Syntax Highlighting */
+        .xml-tag { color: var(--accent-yellow); }
+        .xml-attr-name { color: var(--accent-blue-light); }
+        .xml-attr-value { color: var(--success-green); }
+        .xml-text { color: #f1f5f9; } /* Bright white for maximum readability */
+        .xml-comment { color: var(--text-muted); font-style: italic; }
+        .xml-declaration { color: var(--accent-blue); }
+
+        .hidden { display: none; }
+
+        /* Mode Toggle */
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mode-label {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .mode-label.active {
+            color: var(--accent-yellow);
+            text-shadow: 0 0 10px var(--accent-yellow-glow);
+        }
+
+        /* XML Output Wrapper for overlay editing */
+        .xml-output-wrapper {
+            position: relative;
+            min-height: 400px;
+            max-height: 600px;
+        }
+
+        .xml-output-wrapper pre {
+            margin: 0;
+            min-height: 400px;
+        }
+
+        .xml-output-wrapper.edit-mode pre {
+            pointer-events: none;
+        }
+
+        /* XML Editor Textarea - overlay on pre */
+        .xml-editor {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            max-height: 600px;
+            background: transparent;
+            color: transparent;
+            caret-color: var(--accent-yellow);
+            border: 2px solid var(--accent-blue);
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            overflow: auto;
+            white-space: pre;
+            word-wrap: normal;
+            z-index: 2;
+            box-shadow: 0 0 0 3px var(--accent-blue-glow);
+        }
+
+        .xml-editor::selection {
+            background: rgba(59, 130, 246, 0.4);
+        }
+
+        .xml-editor::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .xml-editor::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 3px;
+        }
+
+        .xml-editor::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent-blue), var(--accent-yellow));
+            border-radius: 3px;
+        }
+
+        /* Row Selector */
+        .row-selector {
+            margin-bottom: 20px;
+            padding: 16px 20px;
+            background: linear-gradient(145deg, var(--bg-card), var(--bg-secondary));
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .row-selector label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .row-selector select {
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+            min-width: 250px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.25s ease;
+        }
+
+        .row-selector select:hover {
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+        }
+
+        .row-selector select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px var(--accent-blue-glow);
+        }
+
+        /* Status Classes */
+        .auto-mapped {
+            background: linear-gradient(145deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08)) !important;
+            border: 1px solid rgba(16, 185, 129, 0.3) !important;
+        }
+
+        .auto-mapped:hover {
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .manual-mapped {
+            background: linear-gradient(145deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.08)) !important;
+            border: 1px solid rgba(251, 191, 36, 0.3) !important;
+        }
+
+        .manual-mapped:hover {
+            box-shadow: 0 4px 20px rgba(251, 191, 36, 0.2);
+        }
+
+        /* File Info */
+        .file-info {
+            background: linear-gradient(145deg, var(--bg-card), var(--bg-secondary));
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .file-info span {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .file-info .filename {
+            color: var(--accent-yellow);
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(15px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes glow {
+            0%, 100% { 
+                box-shadow: 0 0 20px var(--accent-yellow-glow); 
+            }
+            50% { 
+                box-shadow: 0 0 40px var(--accent-yellow-glow), 0 0 60px var(--accent-blue-glow); 
+            }
+        }
+
+        /* Loading animation for buttons */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        button.loading {
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .mapping-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .output-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .row-selector {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .row-selector select {
+                width: 100%;
+                min-width: unset;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+		<div class="header">
+			<img src="https://s14.gifyu.com/images/bTiBS.gif" alt="wbmapper (2)" />
+		</div>
+        
+        <div class="drop-zone" id="dropZone">
+            <div class="icon">📁</div>
+            <p>Drag and drop your Excel file here</p>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">or click to browse</p>
+            <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+        </div>
+
+        <div id="fileInfo" class="file-info hidden">
+            <span>Current file: <span class="filename" id="currentFileName"></span></span>
+            <button class="btn-secondary" onclick="resetAll()">Load New File</button>
+        </div>
+
+        <div id="mappingSection" class="hidden">
+            <div class="row-selector">
+                <label for="rowSelect">Select Movie:</label>
+                <select id="rowSelect"></select>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-secondary" onclick="resetMappings()">↻ Reset</button>
+                <button class="btn-success" onclick="generateXML()">Generate iTunes XML</button>
+            </div>
+
+            <div class="mapping-container">
+                <div class="panel fade-in poster-panel">
+                    <div class="poster-container" id="posterContainer">
+                        <div class="poster-placeholder">
+                            <span class="poster-icon">🎬</span>
+                            <p>Select a movie to display poster</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel fade-in">
+                    <h2>Cast & Crew Check</h2>
+                    <div class="validation-list" id="validationList">
+                        <div class="validation-placeholder">
+                            <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg" alt="TMDB" class="tmdb-logo">
+                            <p>Generate XML first, then validate</p>
+                            <button class="validation-btn-main" id="validateBtn" onclick="validateFromXML()" disabled>
+                                Validate Cast & Crew
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="outputSection" class="output-container hidden">
+            <div class="output-header">
+                <h2>Generated iTunes XML</h2>
+                <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                    <div class="schema-toggle">
+                        <span class="schema-label">5.2</span>
+                        <div class="toggle-switch active" id="schemaToggle" onclick="toggleSchema()">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        <span class="schema-label">5.3</span>
+                    </div>
+                    <div class="mode-toggle">
+                        <span class="mode-label active" id="previewLabel">Preview</span>
+                        <div class="toggle-switch" id="editToggle" onclick="toggleEditMode()">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        <span class="mode-label" id="editLabel">Edit</span>
+                    </div>
+                    <button class="btn-primary" onclick="downloadXML()">💾 Download XML</button>
+                </div>
+            </div>
+            <div class="xml-output-wrapper">
+                <pre id="xmlOutput"></pre>
+                <textarea id="xmlEditor" class="xml-editor hidden" spellcheck="false"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let excelData = [];
+        let headers = [];
+        let currentMappings = {};
+        let generatedXML = '';
+        let processedMovies = [];
+        let currentFileName = '';
+        let schemaVersion = '5.3'; // Default to 5.3
+
+        // TMDB API configuration
+        const TMDB_API_KEY = '42dfe036a7664826cb47fc7a122825f3';
+        const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
+
+        // Fetch movie poster from TMDB
+        async function fetchMoviePoster(movieTitle, releaseYear = null) {
+            const posterContainer = document.getElementById('posterContainer');
+            
+            // Show loading state
+            posterContainer.innerHTML = `
+                <div class="poster-loading">
+                    <div class="spinner"></div>
+                    <p>Searching for poster...</p>
+                </div>
+            `;
+            
+            try {
+                // Clean the title for search
+                let searchTitle = movieTitle.trim();
+                
+                // Build search URL
+                let searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchTitle)}&language=fr-FR`;
+                
+                if (releaseYear) {
+                    searchUrl += `&year=${releaseYear}`;
+                }
+                
+                const response = await fetch(searchUrl);
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    // Find best match (first result or match by year)
+                    let movie = data.results[0];
+                    
+                    if (releaseYear && data.results.length > 1) {
+                        const exactMatch = data.results.find(m => {
+                            const movieYear = m.release_date ? m.release_date.substring(0, 4) : '';
+                            return movieYear === String(releaseYear);
+                        });
+                        if (exactMatch) movie = exactMatch;
+                    }
+                    
+                    if (movie.poster_path) {
+                        const posterUrl = `${TMDB_IMAGE_BASE}${movie.poster_path}`;
+                        const movieYear = movie.release_date ? movie.release_date.substring(0, 4) : '';
+                        const tmdbUrl = `https://www.themoviedb.org/movie/${movie.id}`;
+                        
+                        posterContainer.innerHTML = `
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <a href="${tmdbUrl}" target="_blank" rel="noopener noreferrer" class="poster-link">
+                                    <img src="${posterUrl}" alt="${movie.title}" class="poster-image" />
+                                </a>
+                                <div class="movie-info">
+                                    <div class="movie-title">${movie.title}</div>
+                                    ${movieYear ? `<div class="movie-year">${movieYear}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        showPosterNotFound(movieTitle);
+                    }
+                } else {
+                    // Try English search as fallback
+                    const fallbackUrl = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchTitle)}&language=en-US`;
+                    const fallbackResponse = await fetch(fallbackUrl);
+                    const fallbackData = await fallbackResponse.json();
+                    
+                    if (fallbackData.results && fallbackData.results.length > 0 && fallbackData.results[0].poster_path) {
+                        const movie = fallbackData.results[0];
+                        const posterUrl = `${TMDB_IMAGE_BASE}${movie.poster_path}`;
+                        const movieYear = movie.release_date ? movie.release_date.substring(0, 4) : '';
+                        const tmdbUrl = `https://www.themoviedb.org/movie/${movie.id}`;
+                        
+                        posterContainer.innerHTML = `
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <a href="${tmdbUrl}" target="_blank" rel="noopener noreferrer" class="poster-link">
+                                    <img src="${posterUrl}" alt="${movie.title}" class="poster-image" />
+                                </a>
+                                <div class="movie-info">
+                                    <div class="movie-title">${movie.title}</div>
+                                    ${movieYear ? `<div class="movie-year">${movieYear}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        showPosterNotFound(movieTitle);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching poster:', error);
+                posterContainer.innerHTML = `
+                    <div class="poster-error">
+                        <span class="error-icon">⚠️</span>
+                        <p>Error loading poster</p>
+                        <p style="font-size: 0.8rem; margin-top: 5px;">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function showPosterNotFound(movieTitle) {
+            const posterContainer = document.getElementById('posterContainer');
+            posterContainer.innerHTML = `
+                <div class="poster-error">
+                    <span class="error-icon">🎬</span>
+                    <p>No poster found</p>
+                    <p style="font-size: 0.85rem; margin-top: 5px; color: var(--accent-yellow);">${movieTitle}</p>
+                </div>
+            `;
+        }
+
+        // Complete Language codes dictionary from RFC5646
+        const LANGUAGE_CODES = {
+            'af': 'Afrikaans',
+            'af-ZA': 'Afrikaans (South Africa)',
+            'ar': 'Arabic',
+            'ar-AE': 'Arabic (U.A.E.)',
+            'ar-BH': 'Arabic (Bahrain)',
+            'ar-DZ': 'Arabic (Algeria)',
+            'ar-EG': 'Arabic (Egypt)',
+            'ar-IQ': 'Arabic (Iraq)',
+            'ar-JO': 'Arabic (Jordan)',
+            'ar-KW': 'Arabic (Kuwait)',
+            'ar-LB': 'Arabic (Lebanon)',
+            'ar-LY': 'Arabic (Libya)',
+            'ar-MA': 'Arabic (Morocco)',
+            'ar-OM': 'Arabic (Oman)',
+            'ar-QA': 'Arabic (Qatar)',
+            'ar-SA': 'Arabic (Saudi Arabia)',
+            'ar-SY': 'Arabic (Syria)',
+            'ar-TN': 'Arabic (Tunisia)',
+            'ar-YE': 'Arabic (Yemen)',
+            'az': 'Azeri (Latin)',
+            'az-AZ': 'Azeri (Latin) (Azerbaijan)',
+            'az-Cyrl-AZ': 'Azeri (Cyrillic) (Azerbaijan)',
+            'be': 'Belarusian',
+            'be-BY': 'Belarusian (Belarus)',
+            'bg': 'Bulgarian',
+            'bg-BG': 'Bulgarian (Bulgaria)',
+            'bs-BA': 'Bosnian (Bosnia and Herzegovina)',
+            'ca': 'Catalan',
+            'ca-ES': 'Catalan (Spain)',
+            'cs': 'Czech',
+            'cs-CZ': 'Czech (Czech Republic)',
+            'cy': 'Welsh',
+            'cy-GB': 'Welsh (United Kingdom)',
+            'da': 'Danish',
+            'da-DK': 'Danish (Denmark)',
+            'de': 'German',
+            'de-AT': 'German (Austria)',
+            'de-CH': 'German (Switzerland)',
+            'de-DE': 'German (Germany)',
+            'de-LI': 'German (Liechtenstein)',
+            'de-LU': 'German (Luxembourg)',
+            'dv': 'Divehi',
+            'dv-MV': 'Divehi (Maldives)',
+            'el': 'Greek',
+            'el-GR': 'Greek (Greece)',
+            'en': 'English',
+            'en-AU': 'English (Australia)',
+            'en-BZ': 'English (Belize)',
+            'en-CA': 'English (Canada)',
+            'en-CB': 'English (Caribbean)',
+            'en-GB': 'English (United Kingdom)',
+            'en-IE': 'English (Ireland)',
+            'en-JM': 'English (Jamaica)',
+            'en-NZ': 'English (New Zealand)',
+            'en-PH': 'English (Republic of the Philippines)',
+            'en-TT': 'English (Trinidad and Tobago)',
+            'en-US': 'English (United States)',
+            'en-ZA': 'English (South Africa)',
+            'en-ZW': 'English (Zimbabwe)',
+            'eo': 'Esperanto',
+            'es': 'Spanish',
+            'es-AR': 'Spanish (Argentina)',
+            'es-BO': 'Spanish (Bolivia)',
+            'es-CL': 'Spanish (Chile)',
+            'es-CO': 'Spanish (Colombia)',
+            'es-CR': 'Spanish (Costa Rica)',
+            'es-DO': 'Spanish (Dominican Republic)',
+            'es-EC': 'Spanish (Ecuador)',
+            'es-ES': 'Spanish (Spain)',
+            'es-GT': 'Spanish (Guatemala)',
+            'es-HN': 'Spanish (Honduras)',
+            'es-MX': 'Spanish (Mexico)',
+            'es-NI': 'Spanish (Nicaragua)',
+            'es-PA': 'Spanish (Panama)',
+            'es-PE': 'Spanish (Peru)',
+            'es-PR': 'Spanish (Puerto Rico)',
+            'es-PY': 'Spanish (Paraguay)',
+            'es-SV': 'Spanish (El Salvador)',
+            'es-UY': 'Spanish (Uruguay)',
+            'es-VE': 'Spanish (Venezuela)',
+            'et': 'Estonian',
+            'et-EE': 'Estonian (Estonia)',
+            'eu': 'Basque',
+            'eu-ES': 'Basque (Spain)',
+            'fa': 'Farsi',
+            'fa-IR': 'Farsi (Iran)',
+            'fi': 'Finnish',
+            'fi-FI': 'Finnish (Finland)',
+            'fo': 'Faroese',
+            'fo-FO': 'Faroese (Faroe Islands)',
+            'fr': 'French',
+            'fr-BE': 'French (Belgium)',
+            'fr-CA': 'French (Canada)',
+            'fr-CH': 'French (Switzerland)',
+            'fr-FR': 'French (France)',
+            'fr-LU': 'French (Luxembourg)',
+            'fr-MC': 'French (Principality of Monaco)',
+            'gl': 'Galician',
+            'gl-ES': 'Galician (Spain)',
+            'gu': 'Gujarati',
+            'gu-IN': 'Gujarati (India)',
+            'he': 'Hebrew',
+            'he-IL': 'Hebrew (Israel)',
+            'hi': 'Hindi',
+            'hi-IN': 'Hindi (India)',
+            'hr': 'Croatian',
+            'hr-BA': 'Croatian (Bosnia and Herzegovina)',
+            'hr-HR': 'Croatian (Croatia)',
+            'hu': 'Hungarian',
+            'hu-HU': 'Hungarian (Hungary)',
+            'hy': 'Armenian',
+            'hy-AM': 'Armenian (Armenia)',
+            'id': 'Indonesian',
+            'id-ID': 'Indonesian (Indonesia)',
+            'is': 'Icelandic',
+            'is-IS': 'Icelandic (Iceland)',
+            'it': 'Italian',
+            'it-CH': 'Italian (Switzerland)',
+            'it-IT': 'Italian (Italy)',
+            'ja': 'Japanese',
+            'ja-JP': 'Japanese (Japan)',
+            'ka': 'Georgian',
+            'ka-GE': 'Georgian (Georgia)',
+            'kk': 'Kazakh',
+            'kk-KZ': 'Kazakh (Kazakhstan)',
+            'kn': 'Kannada',
+            'kn-IN': 'Kannada (India)',
+            'ko': 'Korean',
+            'ko-KR': 'Korean (Korea)',
+            'kok': 'Konkani',
+            'kok-IN': 'Konkani (India)',
+            'ky': 'Kyrgyz',
+            'ky-KG': 'Kyrgyz (Kyrgyzstan)',
+            'lt': 'Lithuanian',
+            'lt-LT': 'Lithuanian (Lithuania)',
+            'lv': 'Latvian',
+            'lv-LV': 'Latvian (Latvia)',
+            'mi': 'Maori',
+            'mi-NZ': 'Maori (New Zealand)',
+            'mk': 'FYRO Macedonian',
+            'mk-MK': 'FYRO Macedonian (Former Yugoslav Republic of Macedonia)',
+            'mn': 'Mongolian',
+            'mn-MN': 'Mongolian (Mongolia)',
+            'mr': 'Marathi',
+            'mr-IN': 'Marathi (India)',
+            'ms': 'Malay',
+            'ms-BN': 'Malay (Brunei Darussalam)',
+            'ms-MY': 'Malay (Malaysia)',
+            'mt': 'Maltese',
+            'mt-MT': 'Maltese (Malta)',
+            'nb': 'Norwegian (Bokmål)',
+            'nb-NO': 'Norwegian (Bokmål) (Norway)',
+            'nl': 'Dutch',
+            'nl-BE': 'Dutch (Belgium)',
+            'nl-NL': 'Dutch (Netherlands)',
+            'nn-NO': 'Norwegian (Nynorsk) (Norway)',
+            'ns': 'Northern Sotho',
+            'ns-ZA': 'Northern Sotho (South Africa)',
+            'pa': 'Punjabi',
+            'pa-IN': 'Punjabi (India)',
+            'pl': 'Polish',
+            'pl-PL': 'Polish (Poland)',
+            'ps': 'Pashto',
+            'ps-AR': 'Pashto (Afghanistan)',
+            'pt': 'Portuguese',
+            'pt-BR': 'Portuguese (Brazil)',
+            'pt-PT': 'Portuguese (Portugal)',
+            'qu': 'Quechua',
+            'qu-BO': 'Quechua (Bolivia)',
+            'qu-EC': 'Quechua (Ecuador)',
+            'qu-PE': 'Quechua (Peru)',
+            'ro': 'Romanian',
+            'ro-RO': 'Romanian (Romania)',
+            'ru': 'Russian',
+            'ru-RU': 'Russian (Russia)',
+            'sa': 'Sanskrit',
+            'sa-IN': 'Sanskrit (India)',
+            'se': 'Sami',
+            'se-FI': 'Sami (Finland)',
+            'se-NO': 'Sami (Norway)',
+            'se-SE': 'Sami (Sweden)',
+            'sk': 'Slovak',
+            'sk-SK': 'Slovak (Slovakia)',
+            'sl': 'Slovenian',
+            'sl-SI': 'Slovenian (Slovenia)',
+            'sq': 'Albanian',
+            'sq-AL': 'Albanian (Albania)',
+            'sr-BA': 'Serbian (Latin) (Bosnia and Herzegovina)',
+            'sr-Cyrl-BA': 'Serbian (Cyrillic) (Bosnia and Herzegovina)',
+            'sr-SP': 'Serbian (Latin) (Serbia and Montenegro)',
+            'sr-Cyrl-SP': 'Serbian (Cyrillic) (Serbia and Montenegro)',
+            'sv': 'Swedish',
+            'sv-FI': 'Swedish (Finland)',
+            'sv-SE': 'Swedish (Sweden)',
+            'sw': 'Swahili',
+            'sw-KE': 'Swahili (Kenya)',
+            'syr': 'Syriac',
+            'syr-SY': 'Syriac (Syria)',
+            'ta': 'Tamil',
+            'ta-IN': 'Tamil (India)',
+            'te': 'Telugu',
+            'te-IN': 'Telugu (India)',
+            'th': 'Thai',
+            'th-TH': 'Thai (Thailand)',
+            'tl': 'Tagalog',
+            'tl-PH': 'Tagalog (Philippines)',
+            'tn': 'Tswana',
+            'tn-ZA': 'Tswana (South Africa)',
+            'tr': 'Turkish',
+            'tr-TR': 'Turkish (Turkey)',
+            'tt': 'Tatar',
+            'tt-RU': 'Tatar (Russia)',
+            'ts': 'Tsonga',
+            'uk': 'Ukrainian',
+            'uk-UA': 'Ukrainian (Ukraine)',
+            'ur': 'Urdu',
+            'ur-PK': 'Urdu (Islamic Republic of Pakistan)',
+            'uz': 'Uzbek (Latin)',
+            'uz-UZ': 'Uzbek (Latin) (Uzbekistan)',
+            'uz-Cyrl-UZ': 'Uzbek (Cyrillic) (Uzbekistan)',
+            'vi': 'Vietnamese',
+            'vi-VN': 'Vietnamese (Viet Nam)',
+            'xh': 'Xhosa',
+            'xh-ZA': 'Xhosa (South Africa)',
+            'zh': 'Chinese',
+            'zh-CN': 'Chinese (S)',
+            'zh-HK': 'Chinese (Hong Kong)',
+            'zh-MO': 'Chinese (Macau)',
+            'zh-SG': 'Chinese (Singapore)',
+            'zh-TW': 'Chinese (T)',
+            'zu': 'Zulu',
+            'zu-ZA': 'Zulu (South Africa)'
+        };
+
+        // Country codes dictionary (ISO 3166)
+        const COUNTRY_CODES = {
+            'FR': 'France',
+            'US': 'United States',
+            'GB': 'United Kingdom',
+            'DE': 'Germany',
+            'ES': 'Spain',
+            'IT': 'Italy',
+            'PT': 'Portugal',
+            'NL': 'Netherlands',
+            'BE': 'Belgium',
+            'CH': 'Switzerland',
+            'CA': 'Canada',
+            'AU': 'Australia',
+            'JP': 'Japan',
+            'CN': 'China',
+            'KR': 'Korea'
+        };
+
+        // Mapping from simple country/language codes to RFC5646 language tags
+        const LOCALE_TO_RFC5646 = {
+            'FR': 'fr-FR',
+            'fr': 'fr-FR',
+            'French': 'fr-FR',
+            'US': 'en-US',
+            'en': 'en-US',
+            'English': 'en-US',
+            'GB': 'en-GB',
+            'UK': 'en-GB',
+            'DE': 'de-DE',
+            'de': 'de-DE',
+            'German': 'de-DE',
+            'ES': 'es-ES',
+            'es': 'es-ES',
+            'Spanish': 'es-ES',
+            'IT': 'it-IT',
+            'it': 'it-IT',
+            'Italian': 'it-IT',
+            'PT': 'pt-PT',
+            'pt': 'pt-PT',
+            'Portuguese': 'pt-PT',
+            'NL': 'nl-NL',
+            'nl': 'nl-NL',
+            'Dutch': 'nl-NL',
+            'BE': 'fr-BE',
+            'be': 'fr-BE',
+            'CH': 'fr-CH',
+            'ch': 'fr-CH',
+            'CA': 'fr-CA',
+            'ca': 'en-CA',
+            'AU': 'en-AU',
+            'au': 'en-AU',
+            'JP': 'ja-JP',
+            'ja': 'ja-JP',
+            'Japanese': 'ja-JP',
+            'CN': 'zh-CN',
+            'zh': 'zh-CN',
+            'Chinese': 'zh-CN',
+            'KR': 'ko-KR',
+            'ko': 'ko-KR',
+            'Korean': 'ko-KR',
+            'PL': 'pl-PL',
+            'pl': 'pl-PL',
+            'Polish': 'pl-PL'
+        };
+
+        // Enhanced Genre codes from iTunes specification
+        const GENRE_CODES = {
+            'Action': 'ACTION-ADVENTURE-00',
+            'Adventure': 'ACTION-ADVENTURE-00',
+            'African': 'AFRICAN-00',
+            'Anime': 'ANIME-00',
+            'Bollywood': 'BOLLYWOOD-00',
+            'Classics': 'CLASSICS-00',
+            'Comedy': 'COMEDY-00',
+            'Comédie': 'COMEDY-00',
+            'Concert Films': 'CONCERT-FILMS-00',
+            'Documentary': 'DOCUMENTARY-00',
+            'Drama': 'DRAMA-00',
+            'Drame': 'DRAMA-00',
+            'Foreign': 'FOREIGN-00',
+            'Holiday': 'HOLIDAY-00',
+            'Horror': 'HORROR-00',
+            'Independent': 'INDEPENDENT-00',
+            'Kids': 'KIDS-FAMILY-00',
+            'Family': 'KIDS-FAMILY-00',
+            'Made for TV': 'MADE-FOR-TV-00',
+            'Middle Eastern': 'MIDDLE-EASTERN-00',
+            'Music Documentary': 'MUSIC-DOCUMENTARIES-00',
+            'Music Feature Film': 'MUSIC-FEATURE-FILMS-00',
+            'Musical': 'MUSICALS-00',
+            'Musicals': 'MUSICALS-00',
+            'Regional Indian': 'REGIONAL-INDIAN-00',
+            'Romance': 'ROMANCE-00',
+            'Russian': 'RUSSIAN-00',
+            'Sci-Fi': 'SCIFI-FANTASY-00',
+            'Fantasy': 'SCIFI-FANTASY-00',
+            'Short Films': 'SHORT-FILMS-00',
+            'Special Interest': 'SPECIAL-INTEREST-00',
+            'Sports': 'SPORTS-00',
+            'Thriller': 'THRILLER-00',
+            'Turkish': 'TURKISH-00',
+            'Urban': 'URBAN-00',
+            'Western': 'WESTERN-00'
+        };
+
+        // Rating codes for France (fr-cnc)
+        const RATING_CODES = {
+            'Tous Publics': 'TP',
+            'TP': 'TP',
+            '-10': '-10',
+            '-12': '-12',
+            '-16': '-16',
+            '-18': '-18',
+            'UR': 'UR'
+        };
+
+        // Columns to ignore in mapping (column indices)
+        const IGNORED_COLUMNS = [
+            19,  // T
+            22,  // W
+            26,  // AA
+            30,  // AE
+            31,  // AF
+            36,  // AK
+            37,  // AL
+            34,  // AI
+            38,  // AM
+            35   // AJ
+        ];
+
+        // XML field definitions with paths and types
+        const xmlFields = {
+            'provider': { path: 'provider', type: 'text' },
+            'language': { path: 'language', type: 'text' },
+            'video_type': { path: 'video/type', type: 'text' },
+            'video_subtype': { path: 'video/subtype', type: 'text' },
+            'vendor_id': { path: 'video/vendor_id', type: 'text' },
+            'country': { path: 'video/countries_of_origin/country', type: 'text', attr: 'primary="true"' },
+            'production_country': { path: 'video/production_countries/country', type: 'text', attr: 'primary="true"' },
+            'original_spoken_locale': { path: 'video/original_spoken_locale', type: 'text' },
+            'title': { path: 'video/title', type: 'text' },
+            'studio_release_title': { path: 'video/studio_release_title', type: 'text' },
+            'synopsis': { path: 'video/synopsis', type: 'text' },
+            'production_company': { path: 'video/production_company', type: 'text' },
+            'copyright': { path: 'video/copyright_cline', type: 'text' },
+            'theatrical_release': { path: 'video/theatrical_release_date', type: 'date' },
+            'genre': { path: 'video/genres/genre', type: 'genre' },
+            'rating': { path: 'video/ratings/rating', type: 'rating' },
+            'cast': { path: 'video/cast', type: 'cast' },
+            'crew': { path: 'video/crew', type: 'crew' },
+            'territory': { path: 'video/products/product/territory', type: 'text' },
+            'cleared_sale': { path: 'video/products/product/cleared_for_sale', type: 'boolean' },
+            'cleared_hd_sale': { path: 'video/products/product/cleared_for_hd_sale', type: 'boolean' },
+            'sales_start': { path: 'video/products/product/sales_start_date', type: 'date' },
+            'sales_end': { path: 'video/products/product/sales_end_date', type: 'date' },
+            'cleared_vod': { path: 'video/products/product/cleared_for_vod', type: 'boolean' },
+            'vod_start': { path: 'video/products/product/available_for_vod_date', type: 'date' },
+            'vod_end': { path: 'video/products/product/unavailable_for_vod_date', type: 'date' },
+            'cleared_hd_vod': { path: 'video/products/product/cleared_for_hd_vod', type: 'boolean' },
+            'physical_release': { path: 'video/products/product/physical_release_date', type: 'date' },
+            'preorder_date': { path: 'video/products/product/preorder_sales_start_date', type: 'date' }
+        };
+
+        // Fixed mappings based on column positions
+        const fixedMappings = {
+            'vendor_id': 4,  // Column E
+            'production_company': 10,  // Column K
+            'preorder_date': 33  // Column AH (Pre Order Date)
+        };
+
+        // Auto-mapping rules for other fields
+        const autoMappingRules = {
+            'language': 'language',
+            'provider': 'provider',
+            'video_type': 'video_type',
+            'video_subtype': 'video_subtype',
+            'country': 'country',
+            'Original_Spoken_Locale': 'original_spoken_locale',
+            'title': 'title',
+            'original title': 'studio_release_title',
+            'synopsis': 'synopsis',
+            'copyright_cline': 'copyright',
+            'theatrical_release_date': 'theatrical_release',
+            'genre': 'genre',
+            'rating': 'rating',
+            'cast': 'cast',
+            'crew': 'crew',
+            'territory': 'territory',
+            'cleared for sale': 'cleared_sale',
+            'Sales stard date': 'sales_start',
+            'Sales end date': 'sales_end',
+            'cleared for vod': 'cleared_vod',
+            'available for vod date': 'vod_start',
+            'unavailable for vod date': 'vod_end',
+            'cleared for hd vod': 'cleared_hd_vod',
+            'France physical release date': 'physical_release'
+        };
+
+        // Toggle schema version
+        function toggleSchema() {
+            const toggle = document.getElementById('schemaToggle');
+            toggle.classList.toggle('active');
+            schemaVersion = toggle.classList.contains('active') ? '5.3' : '5.2';
+            
+            // Regenerate XML if it exists
+            if (generatedXML) {
+                generateXML();
+            }
+        }
+
+        let isEditMode = false;
+
+        function toggleEditMode() {
+            const toggle = document.getElementById('editToggle');
+            const previewLabel = document.getElementById('previewLabel');
+            const editLabel = document.getElementById('editLabel');
+            const xmlOutput = document.getElementById('xmlOutput');
+            const xmlEditor = document.getElementById('xmlEditor');
+            const wrapper = document.querySelector('.xml-output-wrapper');
+            
+            toggle.classList.toggle('active');
+            isEditMode = toggle.classList.contains('active');
+            
+            // Update labels
+            previewLabel.classList.toggle('active', !isEditMode);
+            editLabel.classList.toggle('active', isEditMode);
+            
+            if (isEditMode) {
+                // Switch to edit mode
+                wrapper.classList.add('edit-mode');
+                xmlEditor.value = generatedXML;
+                xmlEditor.classList.remove('hidden');
+                
+                // Sync height and set cursor at the beginning
+                syncEditorHeight();
+                xmlEditor.focus();
+                xmlEditor.setSelectionRange(0, 0);
+                xmlEditor.scrollTop = 0;
+                xmlOutput.scrollTop = 0;
+            } else {
+                // Switch to preview mode - update generatedXML with edited content
+                wrapper.classList.remove('edit-mode');
+                generatedXML = xmlEditor.value;
+                xmlOutput.innerHTML = highlightXML(generatedXML);
+                xmlEditor.classList.add('hidden');
+            }
+        }
+
+        // Sync textarea scroll and content with highlighted pre
+        function setupEditorSync() {
+            const xmlEditor = document.getElementById('xmlEditor');
+            const xmlOutput = document.getElementById('xmlOutput');
+            
+            // Sync scrolling
+            xmlEditor.addEventListener('scroll', function() {
+                xmlOutput.scrollTop = xmlEditor.scrollTop;
+                xmlOutput.scrollLeft = xmlEditor.scrollLeft;
+            });
+            
+            // Sync content on input (update highlighting in real-time)
+            xmlEditor.addEventListener('input', function() {
+                generatedXML = xmlEditor.value;
+                xmlOutput.innerHTML = highlightXML(generatedXML);
+                syncEditorHeight();
+            });
+        }
+        
+        // Sync editor height with content
+        function syncEditorHeight() {
+            // Heights are managed by CSS max-height, just ensure proper scrolling
+            const xmlEditor = document.getElementById('xmlEditor');
+            const xmlOutput = document.getElementById('xmlOutput');
+            
+            if (xmlOutput && xmlEditor) {
+                // Sync scroll position
+                xmlOutput.scrollTop = 0;
+                xmlEditor.scrollTop = 0;
+            }
+        }
+
+        // Initialize editor sync when DOM is ready
+        document.addEventListener('DOMContentLoaded', setupEditorSync);
+
+        // Function to convert locale to RFC5646 format
+        function toRFC5646Locale(locale) {
+            if (!locale) return '';
+            
+            // Check if it's already in RFC5646 format (contains a hyphen)
+            if (locale.includes('-')) {
+                return locale;
+            }
+            
+            // Try to find mapping
+            const mapped = LOCALE_TO_RFC5646[locale] || LOCALE_TO_RFC5646[locale.toLowerCase()];
+            if (mapped) {
+                return mapped;
+            }
+            
+            // If no mapping found, try to construct one if it looks like a 2-letter code
+            if (locale.length === 2) {
+                const lower = locale.toLowerCase();
+                // Default to the most common country for that language
+                switch(lower) {
+                    case 'fr': return 'fr-FR';
+                    case 'en': return 'en-US';
+                    case 'de': return 'de-DE';
+                    case 'es': return 'es-ES';
+                    case 'it': return 'it-IT';
+                    case 'pt': return 'pt-PT';
+                    case 'nl': return 'nl-NL';
+                    case 'pl': return 'pl-PL';
+                    case 'ru': return 'ru-RU';
+                    case 'ja': return 'ja-JP';
+                    case 'ko': return 'ko-KR';
+                    case 'zh': return 'zh-CN';
+                    default: return locale; // Return as-is if unknown
+                }
+            }
+            
+            return locale; // Return as-is if no conversion possible
+        }
+
+        // Function to convert text to proper title case
+        function toTitleCase(str) {
+            if (!str) return '';
+            return str.replace(/\w\S*/g, function(txt){
+                return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+            });
+        }
+
+        // Function to convert text to proper name case (handles names better)
+        function toProperCase(str) {
+            if (!str) return '';
+            
+            // Preserve accented characters and handle word boundaries better
+            return str.split(/\s+/).map(word => {
+                // Handle hyphenated names
+                if (word.includes('-')) {
+                    return word.split('-').map(part => 
+                        part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+                    ).join('-');
+                }
+                // Handle apostrophes (D'Angelo, O'Brien, etc.)
+                if (word.includes("'")) {
+                    return word.split("'").map(part => 
+                        part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+                    ).join("'");
+                }
+                // Regular word
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            }).join(' ');
+        }
+
+        // Setup drag and drop
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            // Reset validation list and XML output when new file is loaded
+            document.getElementById('validationList').innerHTML = `
+                <div class="validation-placeholder">
+                    <span class="validation-icon">🔍</span>
+                    <p>Select a movie to validate cast & crew</p>
+                </div>
+            `;
+            document.getElementById('xmlOutput').innerHTML = '';
+            document.getElementById('outputSection').classList.add('hidden');
+            generatedXML = '';
+            currentMappings = {};
+            
+            currentFileName = file.name;
+            document.getElementById('currentFileName').textContent = currentFileName;
+            document.getElementById('fileInfo').classList.remove('hidden');
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                if (jsonData.length > 0) {
+                    headers = jsonData[0];
+                    excelData = jsonData.slice(1);
+                    
+                    // Process movies from rows 2-6 (index 1-5 in excelData)
+                    processMoviesFromData();
+                    
+                    populateRowSelector();
+                    displayMappings();
+                    document.getElementById('mappingSection').classList.remove('hidden');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processMoviesFromData() {
+            processedMovies = [];
+            
+            // Look for main data rows (typically row 3, index 2)
+            // Check rows 2-6 for actual movie data
+            for (let i = 1; i <= 5 && i < excelData.length; i++) {
+                const row = excelData[i];
+                // Check if this row has a title (column H, index 7)
+                if (row && row[7]) {
+                    // This is a main movie row
+                    const movie = {
+                        mainRowIndex: i,
+                        title: row[7],
+                        data: row,
+                        crew: []
+                    };
+                    
+                    // IMPORTANT: Check if the main row has a director
+                    if (row[17] && row[18]) { // Column R and S
+                        movie.crew.push({
+                            role: row[17],
+                            names: row[18]
+                        });
+                    }
+                    
+                    // Collect crew from subsequent rows
+                    for (let j = i + 1; j <= i + 4 && j < excelData.length; j++) {
+                        const crewRow = excelData[j];
+                        if (crewRow && crewRow[17] && crewRow[18]) { // Column R has crew role and S has names
+                            movie.crew.push({
+                                role: crewRow[17],
+                                names: crewRow[18]
+                            });
+                        }
+                    }
+                    
+                    processedMovies.push(movie);
+                }
+            }
+        }
+
+        function populateRowSelector() {
+            const select = document.getElementById('rowSelect');
+            select.innerHTML = '';
+            
+            processedMovies.forEach((movie, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = movie.title;
+                select.appendChild(option);
+            });
+            
+            select.addEventListener('change', updateDataPreview);
+        }
+
+        function displayMappings() {
+            // Mapping list UI has been replaced by poster panel
+            // But we still need to set up the mappings internally
+            
+            headers.forEach((header, index) => {
+                if (!header) return;
+                
+                // Skip ignored columns
+                if (IGNORED_COLUMNS.includes(index)) return;
+                
+                // Check if this is a fixed mapping
+                const fixedField = Object.keys(fixedMappings).find(key => fixedMappings[key] === index);
+                if (fixedField) {
+                    currentMappings[index] = fixedField;
+                }
+            });
+            
+            // Auto-apply fixed mappings and auto-map
+            autoMapFixed();
+            autoMap();
+            updateDataPreview();
+        }
+
+        function autoMapFixed() {
+            // Apply fixed mappings (no UI elements)
+            Object.entries(fixedMappings).forEach(([xmlField, colIndex]) => {
+                currentMappings[colIndex] = xmlField;
+            });
+        }
+
+        function autoMap() {
+            // First apply fixed mappings
+            autoMapFixed();
+            
+            // Then apply auto-mapping rules based on header names
+            headers.forEach((header, index) => {
+                if (!header) return;
+                if (IGNORED_COLUMNS.includes(index)) return;
+                
+                // Skip if already mapped by fixed mapping
+                if (currentMappings[index]) {
+                    return;
+                }
+                
+                if (autoMappingRules[header]) {
+                    currentMappings[index] = autoMappingRules[header];
+                }
+            });
+            
+            updateDataPreview();
+        }
+
+        function resetMappings() {
+            currentMappings = {};
+            // Clear previews
+            document.getElementById('validationList').innerHTML = `
+                <div class="validation-placeholder">
+                    <span class="validation-icon">🔍</span>
+                    <p>Select a movie to validate cast & crew</p>
+                </div>
+            `;
+            document.getElementById('xmlOutput').innerHTML = '';
+            document.getElementById('outputSection').classList.add('hidden');
+            generatedXML = '';
+            
+            // Reset poster
+            const posterContainer = document.getElementById('posterContainer');
+            if (posterContainer) {
+                posterContainer.innerHTML = `
+                    <div class="poster-placeholder">
+                        <span class="poster-icon">🎬</span>
+                        <p>Select a movie to display poster</p>
+                    </div>
+                `;
+            }
+            
+            // Re-apply mappings
+            autoMap();
+        }
+
+        function resetAll() {
+            location.reload();
+        }
+
+        function formatDate(dateValue) {
+            if (!dateValue) return '';
+            
+            // Handle Excel date serial number or date string
+            let date;
+            if (typeof dateValue === 'number') {
+                // Excel date serial number
+                date = new Date((dateValue - 25569) * 86400 * 1000);
+            } else if (typeof dateValue === 'string') {
+                // Handle ISO string or other date formats
+                if (dateValue.includes('T')) {
+                    date = new Date(dateValue);
+                } else {
+                    date = new Date(dateValue);
+                }
+            } else {
+                date = dateValue;
+            }
+            
+            // Format as YYYY-MM-DD
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}`;
+        }
+
+        function updateDataPreview() {
+            const movieIndex = document.getElementById('rowSelect').value;
+            const validationList = document.getElementById('validationList');
+            
+            // Reset validation zone
+            const isXmlGenerated = generatedXML && generatedXML.length > 0;
+            validationList.innerHTML = `
+                <div class="validation-placeholder">
+                    <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg" alt="TMDB" class="tmdb-logo">
+                    <p>${isXmlGenerated ? 'Click to validate against TMDB' : 'Generate XML first, then validate'}</p>
+                    <button class="validation-btn-main" id="validateBtn" onclick="validateFromXML()" ${isXmlGenerated ? '' : 'disabled'}>
+                        Validate Cast & Crew
+                    </button>
+                </div>
+            `;
+            
+            if (!processedMovies[movieIndex]) {
+                return;
+            }
+            
+            const movie = processedMovies[movieIndex];
+            const row = movie.data;
+            
+            // Fetch movie poster from TMDB
+            let releaseYear = null;
+            const theatricalDate = row[12];
+            if (theatricalDate) {
+                const formattedDate = formatDate(theatricalDate);
+                if (formattedDate) {
+                    releaseYear = formattedDate.substring(0, 4);
+                }
+            }
+            
+            if (movie.title) {
+                fetchMoviePoster(movie.title, releaseYear);
+            }
+        }
+
+        // Validate cast and crew from generated XML against TMDB
+        async function validateFromXML() {
+            if (!generatedXML) {
+                alert('Please generate XML first');
+                return;
+            }
+            
+            const validationList = document.getElementById('validationList');
+            const movieIndex = document.getElementById('rowSelect').value;
+            const movie = processedMovies[movieIndex];
+            
+            if (!movie) return;
+            
+            // Show loading state
+            validationList.innerHTML = `
+                <div class="validation-loading">
+                    <div class="spinner"></div>
+                    <p>Validating cast & crew...</p>
+                </div>
+            `;
+            
+            try {
+                // Extract cast and crew names from the generated XML
+                const castNames = extractNamesFromXML(generatedXML, 'cast_member');
+                const crewNames = extractNamesFromXML(generatedXML, 'crew_member');
+                
+                // Get movie info for TMDB search
+                const row = movie.data;
+                let releaseYear = null;
+                const theatricalDate = row[12];
+                if (theatricalDate) {
+                    const formattedDate = formatDate(theatricalDate);
+                    if (formattedDate) {
+                        releaseYear = formattedDate.substring(0, 4);
+                    }
+                }
+                
+                // Search for the movie on TMDB
+                let searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(movie.title)}&language=fr-FR`;
+                if (releaseYear) {
+                    searchUrl += `&year=${releaseYear}`;
+                }
+                
+                const searchResponse = await fetch(searchUrl);
+                const searchData = await searchResponse.json();
+                
+                if (!searchData.results || searchData.results.length === 0) {
+                    // Try English search
+                    const fallbackUrl = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(movie.title)}&language=en-US`;
+                    const fallbackResponse = await fetch(fallbackUrl);
+                    const fallbackData = await fallbackResponse.json();
+                    
+                    if (!fallbackData.results || fallbackData.results.length === 0) {
+                        validationList.innerHTML = `
+                            <div class="validation-placeholder">
+                                <span class="validation-icon">❓</span>
+                                <p>Movie not found on TMDB</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    searchData.results = fallbackData.results;
+                }
+                
+                // Get the movie ID
+                const tmdbMovie = searchData.results[0];
+                const movieId = tmdbMovie.id;
+                
+                // Fetch credits (cast and crew)
+                const creditsUrl = `https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${TMDB_API_KEY}&language=fr-FR`;
+                const creditsResponse = await fetch(creditsUrl);
+                const creditsData = await creditsResponse.json();
+                
+                // Extract TMDB cast and crew (including character/job info)
+                const tmdbCastFull = (creditsData.cast || []).map(c => ({
+                    id: c.id,
+                    name: c.name,
+                    normalized: normalizeName(c.name),
+                    character: c.character || ''
+                }));
+                const tmdbCastOriginal = tmdbCastFull.map(c => c.name);
+                const tmdbCastNormalized = tmdbCastFull.map(c => c.normalized);
+                const tmdbCastIds = tmdbCastFull.map(c => c.id);
+                
+                const tmdbCrewFull = (creditsData.crew || []).map(c => ({
+                    id: c.id,
+                    name: c.name,
+                    normalized: normalizeName(c.name),
+                    job: c.job || '',
+                    department: c.department || ''
+                }));
+                const tmdbCrewOriginal = tmdbCrewFull.map(c => c.name);
+                const tmdbCrewNormalized = tmdbCrewFull.map(c => c.normalized);
+                const tmdbCrewIds = tmdbCrewFull.map(c => c.id);
+                
+                // Build validation HTML
+                let html = '';
+                
+                // Cast validation
+                if (castNames.length > 0) {
+                    html += `<div class="validation-section">`;
+                    html += `<div class="validation-section-title">Cast (${castNames.length})</div>`;
+                    
+                    for (let index = 0; index < castNames.length; index++) {
+                        const item = castNames[index];
+                        const name = item.name;
+                        const character = item.roles;
+                        const normalizedName = normalizeName(name);
+                        let match = findBestMatch(normalizedName, tmdbCastNormalized, tmdbCastOriginal);
+                        
+                        // Get TMDB character if we have a match
+                        const tmdbCharacter = (match.index >= 0 && tmdbCastFull[match.index]) ? tmdbCastFull[match.index].character : '';
+                        
+                        const charHtml = character ? `<span class="role-tag">${character}</span>` : '';
+                        
+                        // Check if character names differ (normalize for comparison)
+                        const hasCharacterDiff = character && tmdbCharacter && 
+                            normalizeName(character) !== normalizeName(tmdbCharacter);
+                        
+                        if (match.score >= 0.85) {
+                            const hasAccentIssue = hasAccentDifference(name, match.original);
+                            
+                            if (hasAccentIssue) {
+                                html += `
+                                    <div class="validation-item accent-warning">
+                                        <span class="validation-status">◐</span>
+                                        <div class="validation-name">
+                                            <div class="excel-name">${name} ${charHtml}</div>
+                                            <div class="tmdb-name">TMDB: ${match.original}${tmdbCharacter ? ` <span class="tmdb-role">(${tmdbCharacter})</span>` : ''}</div>
+                                        </div>
+                                        <div class="validation-action">
+                                            <button class="validation-btn fix" onclick="fixName('cast', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix</button>
+                                        </div>
+                                    </div>
+                                `;
+                            } else if (hasCharacterDiff) {
+                                // Name matches but character differs
+                                html += `
+                                    <div class="validation-item role-warning">
+                                        <span class="validation-status"><span class="status-ok">✓</span></span>
+                                        <div class="validation-name">
+                                            <div class="excel-name">${name} ${charHtml}</div>
+                                            <div class="tmdb-match">↳ ${match.original} <span class="tmdb-role-diff">(TMDB: ${tmdbCharacter})</span></div>
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                html += `
+                                    <div class="validation-item valid">
+                                        <span class="validation-status"><span class="status-ok">✓</span></span>
+                                        <div class="validation-name">
+                                            <div class="excel-name">${name} ${charHtml}</div>
+                                            <div class="tmdb-match">↳ ${match.original}${tmdbCharacter ? ` <span class="tmdb-role">(${tmdbCharacter})</span>` : ''}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        } else if (match.score >= 0.6) {
+                            html += `
+                                <div class="validation-item invalid">
+                                    <span class="validation-status">≈</span>
+                                    <div class="validation-name">
+                                        <div class="excel-name">${name} ${charHtml}</div>
+                                        <div class="tmdb-name">Similar: ${match.original || 'N/A'}${tmdbCharacter ? ` <span class="tmdb-role">(${tmdbCharacter})</span>` : ''}</div>
+                                    </div>
+                                    <div class="validation-action">
+                                        <button class="validation-btn fix" onclick="fixName('cast', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix</button>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            // Try alias search
+                            const aliasResult = await searchPersonAlias(name, tmdbCastIds);
+                            
+                            if (aliasResult.found) {
+                                html += `
+                                    <div class="validation-item accent-warning">
+                                        <span class="validation-status">◐</span>
+                                        <div class="validation-name">
+                                            <div class="excel-name">${name} ${charHtml}</div>
+                                            <div class="tmdb-name">TMDB: ${aliasResult.tmdbName}</div>
+                                        </div>
+                                        <div class="validation-action">
+                                            <button class="validation-btn fix" onclick="fixName('cast', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(aliasResult.tmdbName)}', this)">Fix</button>
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                html += `
+                                    <div class="validation-item not-found">
+                                        <span class="validation-status">✗</span>
+                                        <div class="validation-name">
+                                            <div class="excel-name">${name} ${charHtml}</div>
+                                            <div class="tmdb-name">Not found in TMDB</div>
+                                        </div>
+                                        <div class="validation-action">
+                                            <button class="validation-btn delete" onclick="deleteName('cast', ${index}, '${escapeQuotes(name)}', this)">Delete</button>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        }
+                    }
+                    
+                    html += `</div>`;
+                }
+                
+                // Crew validation
+                if (crewNames.length > 0) {
+                    html += `<div class="validation-section">`;
+                    html += `<div class="validation-section-title">Crew (${crewNames.length})</div>`;
+                    
+                    for (let index = 0; index < crewNames.length; index++) {
+                        const item = crewNames[index];
+                        const name = item.name;
+                        const roles = item.roles;
+                        const normalizedName = normalizeName(name);
+                        let match = findBestMatch(normalizedName, tmdbCrewNormalized, tmdbCrewOriginal);
+                        
+                        // Get TMDB job info if we have a match
+                        const tmdbJob = (match.index >= 0 && tmdbCrewFull[match.index]) ? tmdbCrewFull[match.index].job : '';
+                        
+                        const roleHtml = roles ? `<span class="role-tag">${roles}</span>` : '';
+                        
+                        // Check if job/role differs (normalize for comparison)
+                        const normalizedRole = roles ? normalizeName(roles) : '';
+                        const normalizedTmdbJob = tmdbJob ? normalizeName(tmdbJob) : '';
+                        const hasRoleDiff = roles && tmdbJob && normalizedRole !== normalizedTmdbJob;
+                        
+                        if (match.score >= 0.85) {
+                            const hasAccentIssue = hasAccentDifference(name, match.original);
+                            
+                            if (hasAccentIssue) {
+                                html += `
+                                    <div class="validation-item accent-warning">
+                                        <span class="validation-status">◐</span>
+                                        <div class="validation-name">
+                                            <div class="excel-name">${name} ${roleHtml}</div>
+                                            <div class="tmdb-name">TMDB: ${match.original}${tmdbJob ? ` <span class="tmdb-role">(${tmdbJob})</span>` : ''}</div>
+                                        </div>
+                                        <div class="validation-action">
+                                            <button class="validation-btn fix" onclick="fixName('crew', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix</button>
+                                        </div>
+                                    </div>
+                                `;
+                            } else if (hasRoleDiff) {
+                                // Name matches but job differs
+                                html += `
+                                    <div class="validation-item role-warning">
+                                        <span class="validation-status"><span class="status-ok">✓</span></span>
+                                        <div class="validation-name">
+                                            <div class="excel-name">${name} ${roleHtml}</div>
+                                            <div class="tmdb-match">↳ ${match.original} <span class="tmdb-role-diff">(TMDB: ${tmdbJob})</span></div>
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                html += `
+                                    <div class="validation-item valid">
+                                        <span class="validation-status"><span class="status-ok">✓</span></span>
+                                        <div class="validation-name">
+                                            <div class="excel-name">${name} ${roleHtml}</div>
+                                            <div class="tmdb-match">↳ ${match.original}${tmdbJob ? ` <span class="tmdb-role">(${tmdbJob})</span>` : ''}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        } else if (match.score >= 0.6) {
+                            html += `
+                                <div class="validation-item invalid">
+                                    <span class="validation-status">≈</span>
+                                    <div class="validation-name">
+                                        <div class="excel-name">${name} ${roleHtml}</div>
+                                        <div class="tmdb-name">Similar: ${match.original || 'N/A'}${tmdbJob ? ` <span class="tmdb-role">(${tmdbJob})</span>` : ''}</div>
+                                    </div>
+                                    <div class="validation-action">
+                                        <button class="validation-btn fix" onclick="fixName('crew', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix</button>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            // Try alias search
+                            const aliasResult = await searchPersonAlias(name, tmdbCrewIds);
+                            
+                            if (aliasResult.found) {
+                                html += `
+                                    <div class="validation-item accent-warning">
+                                        <span class="validation-status">◐</span>
+                                        <div class="validation-name">
+                                            <div class="excel-name">${name} ${roleHtml}</div>
+                                            <div class="tmdb-name">TMDB: ${aliasResult.tmdbName}</div>
+                                        </div>
+                                        <div class="validation-action">
+                                            <button class="validation-btn fix" onclick="fixName('crew', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(aliasResult.tmdbName)}', this)">Fix</button>
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                html += `
+                                    <div class="validation-item not-found">
+                                        <span class="validation-status">✗</span>
+                                        <div class="validation-name">
+                                            <div class="excel-name">${name} ${roleHtml}</div>
+                                            <div class="tmdb-name">Not found in TMDB</div>
+                                        </div>
+                                        <div class="validation-action">
+                                            <button class="validation-btn delete" onclick="deleteName('crew', ${index}, '${escapeQuotes(name)}', this)">Delete</button>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        }
+                    }
+                    
+                    html += `</div>`;
+                }
+                
+                if (!html) {
+                    html = `
+                        <div class="validation-placeholder">
+                            <span class="validation-icon">📋</span>
+                            <p>No cast or crew data in XML</p>
+                        </div>
+                    `;
+                }
+                
+                validationList.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error validating cast/crew:', error);
+                validationList.innerHTML = `
+                    <div class="validation-placeholder">
+                        <span class="validation-icon">⚠️</span>
+                        <p>Error validating data</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Extract display names from generated XML
+        // Extract display names from generated XML (with roles for crew)
+        function extractNamesFromXML(xml, memberType) {
+            const results = [];
+            const seenNames = new Set();
+            
+            if (memberType === 'crew_member') {
+                // For crew, extract name and roles
+                const regex = /<crew_member>[\s\S]*?<display_name>([^<]+)<\/display_name>[\s\S]*?<roles>([\s\S]*?)<\/roles>[\s\S]*?<\/crew_member>/gi;
+                let match;
+                
+                while ((match = regex.exec(xml)) !== null) {
+                    const name = match[1].trim();
+                    const rolesBlock = match[2];
+                    
+                    // Extract individual roles
+                    const roles = [];
+                    const roleRegex = /<role>([^<]+)<\/role>/gi;
+                    let roleMatch;
+                    while ((roleMatch = roleRegex.exec(rolesBlock)) !== null) {
+                        roles.push(roleMatch[1].trim());
+                    }
+                    
+                    if (name && !seenNames.has(name)) {
+                        seenNames.add(name);
+                        results.push({ name, roles: roles.join(', ') });
+                    }
+                }
+            } else {
+                // For cast, extract names and character names
+                const regex = /<cast_member>([\s\S]*?)<\/cast_member>/gi;
+                let match;
+                
+                while ((match = regex.exec(xml)) !== null) {
+                    const block = match[1];
+                    
+                    // Extract display name
+                    const nameMatch = block.match(/<display_name>([^<]+)<\/display_name>/i);
+                    const name = nameMatch ? nameMatch[1].trim() : '';
+                    
+                    // Extract character name
+                    const charMatch = block.match(/<character_name>([^<]*)<\/character_name>/i);
+                    const character = charMatch ? charMatch[1].trim() : '';
+                    
+                    if (name && !seenNames.has(name)) {
+                        seenNames.add(name);
+                        results.push({ name, roles: character });
+                    }
+                }
+            }
+            
+            return results;
+        }
+
+        // Normalize name for comparison
+        function normalizeName(name) {
+            if (!name) return '';
+            return name
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '') // Remove accents
+                .replace(/[^a-z\s]/g, '') // Remove non-letters
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        // Parse Excel cast data for validation
+        function parseExcelCast(castValue) {
+            if (!castValue) return [];
+            
+            const cast = [];
+            const entries = castValue.split(/[\r\n]+/).filter(Boolean);
+            
+            entries.forEach(entry => {
+                // Handle dots separator - match 2+ regular dots OR 1+ ellipsis character (U+2026)
+                // Also handle mixed patterns like "..." or "…" or ".…" etc.
+                const dotsMatch = entry.match(/^(.+?)\s*(?:\.{2,}|[\u2026]+|\.[\u2026]|[\u2026]\.)\s*(.*)$/);
+                if (dotsMatch) {
+                    cast.push({ name: toProperCase(dotsMatch[1].trim()), character: dotsMatch[2].trim() });
+                } else if (entry.includes('(') && entry.includes(')')) {
+                    const match = entry.match(/(.+?)\s*\(([^)]+)\)/);
+                    if (match) {
+                        cast.push({ name: toProperCase(match[1].trim()), character: match[2].trim() });
+                    }
+                } else if (entry.trim()) {
+                    cast.push({ name: toProperCase(entry.trim()), character: '' });
+                }
+            });
+            
+            return cast;
+        }
+
+        // Parse Excel crew data for validation
+        function parseExcelCrew(crewData) {
+            if (!crewData || crewData.length === 0) return [];
+            
+            const crew = [];
+            const roleMap = {
+                'Réalisateur': 'Director',
+                'Scénariste': 'Writer',
+                'Producteur': 'Producer',
+                'Producteurs Exécutifs': 'Executive Producer'
+            };
+            
+            crewData.forEach(crewEntry => {
+                if (!crewEntry.names) return;
+                
+                const englishRole = roleMap[crewEntry.role] || crewEntry.role;
+                const lines = crewEntry.names.split(/[\r\n]+/).filter(line => line.trim() !== '');
+                
+                lines.forEach(line => {
+                    // Split by ET/AND/&
+                    const names = line.split(/\s+(?:ET|AND|&)\s+/i);
+                    names.forEach(name => {
+                        name = name.trim();
+                        if (name && !isAllCaps(name)) {
+                            crew.push({ name: toProperCase(name), role: englishRole });
+                        } else if (name && isAllCaps(name)) {
+                            crew.push({ name: toProperCase(name), role: englishRole });
+                        }
+                    });
+                });
+            });
+            
+            return crew;
+        }
+
+        // Find best matching name using similarity
+        function findBestMatch(name, candidates, originalCandidates = null) {
+            let bestScore = 0;
+            let bestMatch = null;
+            let bestOriginal = null;
+            let bestIndex = -1;
+            
+            candidates.forEach((candidate, index) => {
+                const score = stringSimilarity(name, candidate);
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMatch = candidate;
+                    bestIndex = index;
+                    bestOriginal = originalCandidates ? originalCandidates[index] : candidate;
+                }
+            });
+            
+            return { score: bestScore, match: bestMatch, original: bestOriginal, index: bestIndex };
+        }
+
+        // Check if two names have accent differences
+        function hasAccentDifference(name1, name2) {
+            if (!name1 || !name2) return false;
+            const normalized1 = normalizeName(name1);
+            const normalized2 = normalizeName(name2);
+            // If normalized versions match but original don't, there's an accent difference
+            return normalized1 === normalized2 && name1.toLowerCase() !== name2.toLowerCase();
+        }
+
+        // Search for a person by name and check if they're in the movie credits via aliases
+        async function searchPersonAlias(name, movieCreditIds) {
+            try {
+                // Search for the person on TMDB
+                const searchUrl = `https://api.themoviedb.org/3/search/person?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(name)}`;
+                const response = await fetch(searchUrl);
+                const data = await response.json();
+                
+                if (!data.results || data.results.length === 0) {
+                    return { found: false };
+                }
+                
+                // Check if any of the search results are in the movie credits
+                for (const person of data.results.slice(0, 3)) { // Check top 3 results
+                    if (movieCreditIds.includes(person.id)) {
+                        // Found! Get the person's primary TMDB name
+                        const personUrl = `https://api.themoviedb.org/3/person/${person.id}?api_key=${TMDB_API_KEY}`;
+                        const personResponse = await fetch(personUrl);
+                        const personData = await personResponse.json();
+                        
+                        return {
+                            found: true,
+                            tmdbName: personData.name,
+                            personId: person.id
+                        };
+                    }
+                }
+                
+                // Also check by fetching person details and comparing aliases
+                for (const person of data.results.slice(0, 3)) {
+                    const personUrl = `https://api.themoviedb.org/3/person/${person.id}?api_key=${TMDB_API_KEY}`;
+                    const personResponse = await fetch(personUrl);
+                    const personData = await personResponse.json();
+                    
+                    // Check if person ID is in credits
+                    if (movieCreditIds.includes(personData.id)) {
+                        return {
+                            found: true,
+                            tmdbName: personData.name,
+                            personId: personData.id
+                        };
+                    }
+                    
+                    // Check if any alias matches a name in movie credits
+                    const aliases = personData.also_known_as || [];
+                    const normalizedSearchName = normalizeName(name);
+                    
+                    for (const alias of aliases) {
+                        if (normalizeName(alias) === normalizedSearchName) {
+                            // This person has the search name as an alias, check if they're in credits
+                            if (movieCreditIds.includes(personData.id)) {
+                                return {
+                                    found: true,
+                                    tmdbName: personData.name,
+                                    personId: personData.id
+                                };
+                            }
+                        }
+                    }
+                }
+                
+                return { found: false };
+            } catch (error) {
+                console.error('Error searching person alias:', error);
+                return { found: false };
+            }
+        }
+
+        // Calculate string similarity (Levenshtein-based)
+        function stringSimilarity(s1, s2) {
+            if (s1 === s2) return 1;
+            if (!s1 || !s2) return 0;
+            
+            const longer = s1.length > s2.length ? s1 : s2;
+            const shorter = s1.length > s2.length ? s2 : s1;
+            
+            if (longer.length === 0) return 1;
+            
+            const costs = [];
+            for (let i = 0; i <= s1.length; i++) {
+                let lastValue = i;
+                for (let j = 0; j <= s2.length; j++) {
+                    if (i === 0) {
+                        costs[j] = j;
+                    } else if (j > 0) {
+                        let newValue = costs[j - 1];
+                        if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
+                            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                        }
+                        costs[j - 1] = lastValue;
+                        lastValue = newValue;
+                    }
+                }
+                if (i > 0) costs[s2.length] = lastValue;
+            }
+            
+            return (longer.length - costs[s2.length]) / longer.length;
+        }
+
+        function cleanCopyright(copyrightValue) {
+            if (!copyrightValue) return '';
+            
+            // Remove © and @ symbols
+            let cleaned = copyrightValue.replace(/[©@]/g, '').trim();
+            
+            // Remove leading/trailing dashes
+            cleaned = cleaned.replace(/^[-–]+|[-–]+$/g, '').trim();
+            
+            // Split by slash, dash, or emdash to get parts
+            const parts = cleaned.split(/\s*[\/–-]\s*/);
+            
+            // Process each part to apply proper case to production companies
+            const processedParts = parts.map(part => {
+                part = part.trim();
+                
+                // Check if the part starts with a year (4 digits)
+                if (/^\d{4}/.test(part)) {
+                    // Keep the year part, but process the rest if there's more
+                    const yearMatch = part.match(/^(\d{4})\s*(.*)$/);
+                    if (yearMatch) {
+                        const year = yearMatch[1];
+                        const rest = yearMatch[2];
+                        if (rest) {
+                            // Process the rest (company name)
+                            return year + ' ' + formatCompanyName(rest);
+                        }
+                        return year;
+                    }
+                }
+                
+                // It's a company name, format it
+                return formatCompanyName(part);
+            });
+            
+            // Join with ' / ' (spaces around slashes)
+            return processedParts.join(' / ');
+        }
+        
+        function formatCompanyName(name) {
+            if (!name) return '';
+            
+            // List of words that should stay lowercase (unless at the beginning)
+            const lowercaseWords = ['de', 'du', 'et', 'la', 'le', 'les'];
+            
+            // List of known acronyms that should stay uppercase
+            const acronyms = ['TV', 'USA', 'UK', 'BBC', 'HBO', 'ABC', 'CBS', 'NBC'];
+            
+            // Split by spaces
+            const words = name.split(/\s+/);
+            
+            const formatted = words.map((word, index) => {
+                // Check if it's a number
+                if (/^\d+$/.test(word)) {
+                    return word;
+                }
+                
+                // Check if it's a known acronym
+                if (acronyms.includes(word.toUpperCase())) {
+                    return word.toUpperCase();
+                }
+                
+                // Check if it should be lowercase (but not if it's the first word)
+                if (index > 0 && lowercaseWords.includes(word.toLowerCase())) {
+                    return word.toLowerCase();
+                }
+                
+                // Otherwise, apply title case
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            });
+            
+            return formatted.join(' ');
+        }
+
+        function parseGenres(genreValue) {
+            if (!genreValue) return '';
+            
+            // Split genres by line breaks, commas, slashes, "and", or "&"
+            const genreList = genreValue.split(/[\r\n,\/]+|and|&/).map(g => g.trim()).filter(Boolean);
+            let genresXML = '';
+            
+            genreList.forEach(genre => {
+                if (genre) {
+                    // Try to find the genre code
+                    let genreCode = GENRE_CODES[genre];
+                    
+                    // If not found, try with normalized genre name
+                    if (!genreCode) {
+                        const normalizedGenre = genre.charAt(0).toUpperCase() + genre.slice(1).toLowerCase();
+                        genreCode = GENRE_CODES[normalizedGenre];
+                    }
+                    
+                    // Default to the specific genre codes if no match
+                    if (!genreCode) {
+                        // Check for specific common cases
+                        if (genre.toLowerCase() === 'drame' || genre.toLowerCase() === 'drama') {
+                            genreCode = 'DRAMA-00';
+                            genre = 'Drama';
+                        } else if (genre.toLowerCase() === 'thriller') {
+                            genreCode = 'THRILLER-00';
+                            genre = 'Thriller';
+                        } else if (genre.toLowerCase() === 'comédie' || genre.toLowerCase() === 'comedy') {
+                            genreCode = 'COMEDY-00';
+                            genre = 'Comedy';
+                        } else {
+                            // Use the genre as-is if no mapping found
+                            genreCode = genre.toUpperCase().replace(/[^A-Z]/g, '') + '-00';
+                        }
+                    }
+                    
+                    genresXML += `
+      <genre code="${genreCode}">${genre}</genre>`;
+                }
+            });
+            
+            return genresXML;
+        }
+
+        function parseRating(ratingValue) {
+            return RATING_CODES[ratingValue] || 'TP';
+        }
+
+        function parseCast(castValue, useV52Format = false) {
+            if (!castValue) return '';
+            
+            let castXML = '';
+            let castMembers = [];
+            
+            // First, try to parse the comma-separated format: "Name (Character), Name (Character)"
+            // This handles the Diplodocus and Indomptables format
+            if (castValue.includes('(') && castValue.includes(')') && castValue.includes(',')) {
+                // Split by comma that's not inside parentheses
+                const entries = castValue.split(/,(?![^(]*\))/).map(s => s.trim()).filter(Boolean);
+                
+                let allMatchParentheses = true;
+                const tempMembers = [];
+                
+                entries.forEach(entry => {
+                    const match = entry.match(/(.+?)\s*\(([^)]+)\)/);
+                    if (match) {
+                        const actor = toProperCase(match[1].trim());
+                        const character = match[2].trim();
+                        tempMembers.push({ actor, character });
+                    } else {
+                        allMatchParentheses = false;
+                    }
+                });
+                
+                if (allMatchParentheses && tempMembers.length > 0) {
+                    castMembers = tempMembers;
+                }
+            }
+            
+            // If no cast members found yet, try other formats
+            if (castMembers.length === 0) {
+                // Split by line breaks or 3+ spaces
+                const entries = castValue.split(/[\r\n]+|\s{3,}/).filter(Boolean);
+                
+                entries.forEach(entry => {
+                    let actor = '', character = '';
+                    
+                    // Check for format with dots or ellipsis
+                    // Matches: "...", "..", "…", "…..", etc. (2+ dots OR 1+ ellipsis)
+                    const dotsMatch = entry.match(/^(.+?)\s*(?:\.{2,}|[\u2026]+)\s*(.+)$/);
+                    if (dotsMatch) {
+                        actor = toProperCase(dotsMatch[1].trim());
+                        character = dotsMatch[2].trim();
+                        castMembers.push({ actor, character });
+                    }
+                    // Check for format: "Name (Role)" with parentheses
+                    else if (entry.includes('(') && entry.includes(')')) {
+                        const match = entry.match(/(.+?)\s*\(([^)]+)\)/);
+                        if (match) {
+                            actor = toProperCase(match[1].trim());
+                            character = match[2].trim();
+                            castMembers.push({ actor, character });
+                        }
+                    } 
+                    // Check for format: "Name : Role" with colon
+                    else if (entry.includes(':')) {
+                        const parts = entry.split(':').map(s => s.trim());
+                        if (parts.length >= 2) {
+                            actor = toProperCase(parts[0]);
+                            character = parts[1];
+                            castMembers.push({ actor, character });
+                        }
+                    }
+                    // If no separator found, treat it as just an actor name with no character
+                    else if (entry.trim()) {
+                        actor = toProperCase(entry.trim());
+                        character = ''; // Empty character name
+                        castMembers.push({ actor, character });
+                    }
+                });
+            }
+            
+            // Generate XML based on schema version
+            castMembers.forEach(member => {
+                if (useV52Format) {
+                    // 5.2 format - simpler structure
+                    castXML += `
+      <cast_member>
+        <display_name>${member.actor}</display_name>
+        <character_name>${member.character || ''}</character_name>
+      </cast_member>`;
+                } else {
+                    // 5.3 format - with characters wrapper
+                    if (member.character) {
+                        castXML += `
+      <cast_member>
+        <display_name>${member.actor}</display_name>
+        <characters>
+          <character>
+            <reference_id>${member.character.toUpperCase().replace(/\s+/g, '_')}</reference_id>
+            <character_name>${member.character}</character_name>
+          </character>
+        </characters>
+      </cast_member>`;
+                    } else {
+                        // For cast members without character names
+                        castXML += `
+      <cast_member>
+        <display_name>${member.actor}</display_name>
+        <characters>
+          <character>
+            <reference_id></reference_id>
+            <character_name></character_name>
+          </character>
+        </characters>
+      </cast_member>`;
+                    }
+                }
+            });
+            
+            return castXML;
+        }
+
+        function parseCrew(crewData) {
+            if (!crewData || crewData.length === 0) return '';
+            
+            // Map French roles to English
+            const roleMap = {
+                'Réalisateur': 'Director',
+                'Scénariste': 'Writer',
+                'Producteur': 'Producer',
+                'Producteurs Exécutifs': 'Executive Producer'
+            };
+            
+            // List of production company indicators
+            const productionIndicators = ['Productions', 'Production', 'Films', 'Studio', 'Entertainment', 'Pictures', 'PRODUCTIONS'];
+            
+            // Aggregate crew members by name
+            const crewByName = {};
+            
+            crewData.forEach(crewEntry => {
+                if (!crewEntry.names) return;
+                
+                const englishRole = roleMap[crewEntry.role] || crewEntry.role;
+                
+                // Split the names by line breaks first
+                const lines = crewEntry.names.split(/[\r\n]+/).filter(line => line.trim() !== '');
+                
+                lines.forEach(line => {
+                    line = line.trim();
+                    if (!line) return;
+                    
+                    // Parse names more carefully
+                    // Look for production company patterns to remove them
+                    let cleanedLine = line;
+                    productionIndicators.forEach(indicator => {
+                        // Remove company names that contain these indicators
+                        const companyPattern = new RegExp(`\\b[A-ZÀ-Ü][\\w\\s]*${indicator}\\b`, 'gi');
+                        cleanedLine = cleanedLine.replace(companyPattern, '').trim();
+                    });
+                    
+                    // Now parse the remaining names
+                    // First, split on separators like "ET" (French) or "AND" (English)
+                    // These are common ways to list multiple people
+                    const nameParts = cleanedLine.split(/\s+(?:ET|AND|&)\s+/i).map(s => s.trim()).filter(Boolean);
+                    
+                    // Process each part (which may still contain multiple names)
+                    nameParts.forEach(part => {
+                        const nameWords = part.split(/\s+/);
+                        const extractedNames = [];
+                        
+                        // If there's a comma, split by comma
+                        if (part.includes(',')) {
+                            const commaSplit = part.split(',').map(s => s.trim()).filter(Boolean);
+                            extractedNames.push(...commaSplit);
+                        }
+                        // Check for pattern like "Raphaële Moussafir Stéphane Kazandjan"
+                        // We need to identify where one name ends and another begins
+                        else if (nameWords.length >= 4) {
+                            // Try to find name boundaries by looking for typical first name/last name patterns
+                            // This is heuristic-based
+                            let currentName = [];
+                            
+                            for (let i = 0; i < nameWords.length; i++) {
+                                const word = nameWords[i];
+                                currentName.push(word);
+                                
+                                // Check if the next word looks like it starts a new name
+                                // (starts with capital and current name already has 2 words)
+                                if (i < nameWords.length - 1) {
+                                    const nextWord = nameWords[i + 1];
+                                    const isNextCapitalized = /^[A-ZÀ-Ü]/.test(nextWord);
+                                    
+                                    // If we have at least 2 words and the next is capitalized,
+                                    // it might be a new name
+                                    if (currentName.length >= 2 && isNextCapitalized) {
+                                        // Check if this looks complete
+                                        // Common pattern: FirstName LastName
+                                        extractedNames.push(currentName.join(' '));
+                                        currentName = [];
+                                    }
+                                }
+                            }
+                            
+                            // Add any remaining words as the last name
+                            if (currentName.length > 0) {
+                                extractedNames.push(currentName.join(' '));
+                            }
+                        }
+                        // Otherwise treat as single name
+                        else {
+                            extractedNames.push(part);
+                        }
+                        
+                        // Process each extracted name
+                        extractedNames.forEach(name => {
+                            name = name.trim();
+                            if (!name) return;  // Only skip empty names, not ALL CAPS (crew names are often in ALL CAPS)
+                            
+                            // Apply proper case to names (this handles ALL CAPS conversion)
+                            const properName = toProperCase(name);
+                            
+                            if (!crewByName[properName]) {
+                                crewByName[properName] = [];
+                            }
+                            if (!crewByName[properName].includes(englishRole)) {
+                                crewByName[properName].push(englishRole);
+                            }
+                        });
+                    });
+                });
+            });
+            
+            // Build XML with aggregated roles
+            let crewXML = '';
+            Object.entries(crewByName).forEach(([name, roles]) => {
+                crewXML += `
+      <crew_member>
+        <display_name>${name}</display_name>
+        <roles>`;
+                roles.forEach(role => {
+                    crewXML += `
+          <role>${role}</role>`;
+                });
+                crewXML += `
+        </roles>
+      </crew_member>`;
+            });
+            
+            return crewXML;
+        }
+
+        function isAllCaps(str) {
+            // Check if string is all uppercase (excluding spaces and special characters)
+            const letters = str.replace(/[^a-zA-ZÀ-ÿ]/g, '');
+            return letters.length > 0 && letters === letters.toUpperCase();
+        }
+
+        // Escape quotes for use in onclick attributes
+        function escapeQuotes(str) {
+            if (!str) return '';
+            return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+
+        // Fix name in XML (replace incorrect name with TMDB correct name)
+        function fixName(type, index, oldName, newName, button) {
+            if (!generatedXML) {
+                alert('Please generate XML first');
+                return;
+            }
+            
+            // Replace the name in the generated XML
+            // Create regex that matches the name in display_name tags
+            const escapedOldName = oldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(<display_name>)${escapedOldName}(</display_name>)`, 'gi');
+            
+            generatedXML = generatedXML.replace(regex, `$1${newName}$2`);
+            
+            // Update the XML display
+            document.getElementById('xmlOutput').innerHTML = highlightXML(generatedXML);
+            
+            // Also update the textarea if in edit mode
+            const xmlEditor = document.getElementById('xmlEditor');
+            if (xmlEditor) {
+                xmlEditor.value = generatedXML;
+            }
+            
+            // Update button state
+            button.textContent = 'Fixed';
+            button.classList.remove('fix');
+            button.classList.add('applied');
+            button.onclick = null;
+            
+            // Update the validation item
+            const item = button.closest('.validation-item');
+            if (item) {
+                item.classList.remove('accent-warning');
+                item.classList.add('valid');
+                item.querySelector('.validation-status').textContent = '✓';
+                item.querySelector('.excel-name').textContent = newName;
+                const tmdbNameEl = item.querySelector('.tmdb-name');
+                if (tmdbNameEl) {
+                    tmdbNameEl.remove();
+                }
+            }
+        }
+
+        // Delete name from XML
+        function deleteName(type, index, name, button) {
+            if (!generatedXML) {
+                alert('Please generate XML first');
+                return;
+            }
+            
+            const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const tagName = type === 'cast' ? 'cast_member' : 'crew_member';
+            
+            // Split XML into lines to find and remove the specific block
+            const lines = generatedXML.split('\n');
+            let newLines = [];
+            let inTargetBlock = false;
+            let blockDepth = 0;
+            let foundName = false;
+            let blockStartIndex = -1;
+            let tempBlock = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const trimmedLine = line.trim();
+                
+                // Check if we're starting a new member block
+                if (trimmedLine === `<${tagName}>`) {
+                    inTargetBlock = true;
+                    blockDepth = 1;
+                    foundName = false;
+                    blockStartIndex = newLines.length;
+                    tempBlock = [line];
+                    continue;
+                }
+                
+                if (inTargetBlock) {
+                    tempBlock.push(line);
+                    
+                    // Check if this line contains the target name
+                    if (line.includes(`<display_name>${name}</display_name>`)) {
+                        foundName = true;
+                    }
+                    
+                    // Check for end of block
+                    if (trimmedLine === `</${tagName}>`) {
+                        if (foundName) {
+                            // Skip this block (don't add it to newLines)
+                            inTargetBlock = false;
+                            tempBlock = [];
+                            continue;
+                        } else {
+                            // Keep this block
+                            newLines = newLines.concat(tempBlock);
+                        }
+                        inTargetBlock = false;
+                        tempBlock = [];
+                        continue;
+                    }
+                } else {
+                    newLines.push(line);
+                }
+            }
+            
+            generatedXML = newLines.join('\n');
+            
+            // Update the XML display
+            document.getElementById('xmlOutput').innerHTML = highlightXML(generatedXML);
+            
+            // Also update the textarea if in edit mode
+            const xmlEditor = document.getElementById('xmlEditor');
+            if (xmlEditor) {
+                xmlEditor.value = generatedXML;
+            }
+            
+            // Update button state
+            button.textContent = 'Deleted';
+            button.classList.remove('delete');
+            button.classList.add('applied');
+            button.onclick = null;
+            
+            // Update the validation item
+            const item = button.closest('.validation-item');
+            if (item) {
+                item.style.opacity = '0.5';
+                item.style.textDecoration = 'line-through';
+            }
+        }
+
+        function escapeXml(unsafe) {
+            return unsafe.replace(/[<>&'"]/g, function (c) {
+                switch (c) {
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '&': return '&amp;';
+                    case '\'': return '&apos;';
+                    case '"': return '&quot;';
+                }
+            });
+        }
+
+        function highlightXML(xml) {
+            // Escape HTML entities first
+            let highlighted = xml
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            
+            // Process the XML in a more structured way
+            // Split by tags and process each part
+            const parts = highlighted.split(/(&lt;[^&]*&gt;)/g);
+            
+            highlighted = parts.map((part, index) => {
+                // Check if this is a tag
+                if (part.startsWith('&lt;')) {
+                    // XML declaration
+                    if (part.startsWith('&lt;?xml')) {
+                        return '<span class="xml-declaration">' + part + '</span>';
+                    }
+                    // Comment
+                    if (part.startsWith('&lt;!--')) {
+                        return '<span class="xml-comment">' + part + '</span>';
+                    }
+                    // Self-closing tag or regular tag
+                    return part.replace(/(&lt;\/?)([a-zA-Z_][\w:.-]*)((?:\s+[a-zA-Z_][\w:.-]*(?:\s*=\s*"[^"]*")?)*\s*\/?)(&gt;)/g, 
+                        function(match, open, tag, attrs, close) {
+                            if (attrs) {
+                                attrs = attrs.replace(/([a-zA-Z_][\w:.-]*)(\s*=\s*)"([^"]*)"/g, 
+                                    '<span class="xml-attr-name">$1</span>$2<span class="xml-attr-value">"$3"</span>');
+                            }
+                            return '<span class="xml-tag">' + open + tag + '</span>' + attrs + '<span class="xml-tag">' + close + '</span>';
+                        });
+                } else {
+                    // Text content - only highlight if not just whitespace
+                    if (part.trim()) {
+                        return '<span class="xml-text">' + part + '</span>';
+                    }
+                    return part; // Keep whitespace as-is
+                }
+            }).join('');
+            
+            return highlighted;
+        }
+
+        function generateXML() {
+            const movieIndex = document.getElementById('rowSelect').value;
+            const movie = processedMovies[movieIndex];
+            
+            if (!movie) return;
+            
+            const row = movie.data;
+            
+            const getValue = (index) => {
+                return row[index] || '';
+            };
+            
+            const getMappedValue = (xmlField) => {
+                const index = Object.keys(currentMappings).find(key => currentMappings[key] === xmlField);
+                if (!index) return '';
+                return getValue(parseInt(index));
+            };
+            
+            // Get title and apply proper case if all caps
+            let title = getMappedValue('title');
+            if (title && isAllCaps(title)) {
+                title = toTitleCase(title);
+            }
+            
+            // Get studio release title
+            let studioTitle = getMappedValue('studio_release_title') || title;
+            if (studioTitle && isAllCaps(studioTitle)) {
+                studioTitle = toTitleCase(studioTitle);
+            }
+            
+            // Get original spoken locale and convert to RFC5646 format
+            let originalSpokenLocale = getMappedValue('original_spoken_locale') || getMappedValue('language');
+            originalSpokenLocale = toRFC5646Locale(originalSpokenLocale);
+            
+            // Check production company - skip if all caps
+            let productionCompany = getMappedValue('production_company');
+            if (productionCompany && isAllCaps(productionCompany)) {
+                productionCompany = '';
+            }
+            
+            // Build crew XML from collected crew data
+            const crewXML = parseCrew(movie.crew);
+            
+            // Get preorder date
+            const preorderDate = getMappedValue('preorder_date');
+            
+            // Get country value
+            const country = getMappedValue('country');
+            
+            // Generate different XML based on schema version
+            let xml = '';
+            if (schemaVersion === '5.2') {
+                // Version 5.2 format
+                xml = `<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://apple.com/itunes/importer" version="film5.2">
+  <provider>${getMappedValue('provider')}</provider>
+  <language>${getMappedValue('language')}</language>
+  <video>
+    <type>${getMappedValue('video_type')}</type>
+    <subtype>${getMappedValue('video_subtype')}</subtype>
+    <vendor_id>${getMappedValue('vendor_id')}</vendor_id>
+    <isan></isan>
+    <country>${country}</country>
+    <original_spoken_locale>${originalSpokenLocale}</original_spoken_locale>
+    <title>${title}</title>
+    <studio_release_title>${studioTitle}</studio_release_title>
+    <synopsis>${getMappedValue('synopsis')}</synopsis>${productionCompany ? `
+    <production_company>${productionCompany}</production_company>` : ''}
+    <copyright_cline>${cleanCopyright(getMappedValue('copyright'))}</copyright_cline>
+    <theatrical_release_date>${formatDate(getMappedValue('theatrical_release'))}</theatrical_release_date>
+    <genres>${parseGenres(getMappedValue('genre'))}
+    </genres>
+    <ratings>
+      <rating system="fr-cnc" code="${parseRating(getMappedValue('rating'))}"/>
+    </ratings>
+    <regions>
+      <region>
+        <territory>${getMappedValue('territory')}</territory>
+        <theatrical_release_date>${formatDate(getMappedValue('theatrical_release'))}</theatrical_release_date>
+      </region>
+    </regions>
+    <cast>${parseCast(getMappedValue('cast'), true)}
+    </cast>
+    <crew>${crewXML}
+    </crew>
+    <products>
+      <product>
+        <territory>${getMappedValue('territory')}</territory>
+        <cleared_for_sale>${getMappedValue('cleared_sale') || 'true'}</cleared_for_sale>
+        <cleared_for_hd_sale>${getMappedValue('cleared_sale') || 'true'}</cleared_for_hd_sale>
+        <wholesale_price_tier>8</wholesale_price_tier>
+        <hd_wholesale_price_tier>108</hd_wholesale_price_tier>${preorderDate ? `
+        <preorder_sales_start_date>${formatDate(preorderDate)}</preorder_sales_start_date>` : ''}
+        <sales_start_date>${formatDate(getMappedValue('sales_start'))}</sales_start_date>
+        <sales_end_date>${formatDate(getMappedValue('sales_end'))}</sales_end_date>
+        <cleared_for_vod>${getMappedValue('cleared_vod') || 'true'}</cleared_for_vod>
+        <vod_type>Tier 2</vod_type>
+        <available_for_vod_date>${formatDate(getMappedValue('vod_start'))}</available_for_vod_date>
+        <unavailable_for_vod_date>${formatDate(getMappedValue('vod_end'))}</unavailable_for_vod_date>
+        <cleared_for_hd_vod>${getMappedValue('cleared_hd_vod') || 'true'}</cleared_for_hd_vod>
+        <physical_release_date>${formatDate(getMappedValue('physical_release'))}</physical_release_date>
+      </product>
+    </products>
+  </video>
+</package>`;
+            } else {
+                // Version 5.3 format (default)
+                xml = `<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://apple.com/itunes/importer" version="film5.3">
+  <provider>${getMappedValue('provider')}</provider>
+  <language>${getMappedValue('language')}</language>
+  <video>
+    <type>${getMappedValue('video_type')}</type>
+    <subtype>${getMappedValue('video_subtype')}</subtype>
+    <vendor_id>${getMappedValue('vendor_id')}</vendor_id>
+    <isan></isan>
+    <countries_of_origin>
+      <country primary="true">${country}</country>
+    </countries_of_origin>
+    <production_countries>
+      <country primary="true">${country}</country>
+    </production_countries>
+    <original_spoken_locale>${originalSpokenLocale}</original_spoken_locale>
+    <title>${title}</title>
+    <studio_release_title>${studioTitle}</studio_release_title>
+    <synopsis>${getMappedValue('synopsis')}</synopsis>${productionCompany ? `
+    <production_company>${productionCompany}</production_company>` : ''}
+    <copyright_cline>${cleanCopyright(getMappedValue('copyright'))}</copyright_cline>
+    <theatrical_release_date>${formatDate(getMappedValue('theatrical_release'))}</theatrical_release_date>
+    <genres>${parseGenres(getMappedValue('genre'))}
+    </genres>
+    <ratings>
+      <rating system="fr-cnc" code="${parseRating(getMappedValue('rating'))}"/>
+    </ratings>
+    <regions>
+      <region>
+        <territory>${getMappedValue('territory')}</territory>
+        <theatrical_release_date>${formatDate(getMappedValue('theatrical_release'))}</theatrical_release_date>
+      </region>
+    </regions>
+    <cast>${parseCast(getMappedValue('cast'), false)}
+    </cast>
+    <crew>${crewXML}
+    </crew>
+    <products>
+      <product>
+        <territory>${getMappedValue('territory')}</territory>
+        <cleared_for_sale>${getMappedValue('cleared_sale') || 'true'}</cleared_for_sale>
+        <cleared_for_hd_sale>${getMappedValue('cleared_sale') || 'true'}</cleared_for_hd_sale>
+        <wholesale_price_tier>8</wholesale_price_tier>
+        <hd_wholesale_price_tier>108</hd_wholesale_price_tier>${preorderDate ? `
+        <preorder_sales_start_date>${formatDate(preorderDate)}</preorder_sales_start_date>` : ''}
+        <sales_start_date>${formatDate(getMappedValue('sales_start'))}</sales_start_date>
+        <sales_end_date>${formatDate(getMappedValue('sales_end'))}</sales_end_date>
+        <cleared_for_vod>${getMappedValue('cleared_vod') || 'true'}</cleared_for_vod>
+        <vod_type>Tier 2</vod_type>
+        <available_for_vod_date>${formatDate(getMappedValue('vod_start'))}</available_for_vod_date>
+        <unavailable_for_vod_date>${formatDate(getMappedValue('vod_end'))}</unavailable_for_vod_date>
+        <cleared_for_hd_vod>${getMappedValue('cleared_hd_vod') || 'true'}</cleared_for_hd_vod>
+        <physical_release_date>${formatDate(getMappedValue('physical_release'))}</physical_release_date>
+      </product>
+    </products>
+  </video>
+</package>`;
+            }
+            
+            generatedXML = xml;
+            
+            // Reset to preview mode if in edit mode
+            if (isEditMode) {
+                const toggle = document.getElementById('editToggle');
+                const wrapper = document.querySelector('.xml-output-wrapper');
+                toggle.classList.remove('active');
+                wrapper.classList.remove('edit-mode');
+                document.getElementById('previewLabel').classList.add('active');
+                document.getElementById('editLabel').classList.remove('active');
+                document.getElementById('xmlEditor').classList.add('hidden');
+                isEditMode = false;
+            }
+            
+            // Apply syntax highlighting to preview
+            document.getElementById('xmlOutput').innerHTML = highlightXML(xml);
+            // Also populate editor for when user switches to edit mode
+            document.getElementById('xmlEditor').value = xml;
+            document.getElementById('outputSection').classList.remove('hidden');
+            
+            // Enable the validate button
+            const validateBtn = document.getElementById('validateBtn');
+            if (validateBtn) {
+                validateBtn.disabled = false;
+            }
+            
+            // Scroll to output
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function downloadXML() {
+            // Get the XML content - use editor content if in edit mode
+            let xmlContent = generatedXML;
+            if (isEditMode) {
+                xmlContent = document.getElementById('xmlEditor').value;
+                generatedXML = xmlContent; // Update the stored XML
+            }
+            
+            if (!xmlContent) return;
+            
+            const blob = new Blob([xmlContent], { type: 'text/xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            // Get the metadata for filename
+            const movieIndex = document.getElementById('rowSelect').value;
+            const movie = processedMovies[movieIndex];
+            const row = movie.data;
+            
+            const provider = row[1] || 'Provider'; // Column B
+            const vendorId = row[4] || 'VendorID'; // Column E
+            const title = movie.title || 'metadata';
+            
+            // Format: Provider_vendorID_Title_metadata.xml
+            a.download = `${provider}_${vendorId}_${title.replace(/[^a-z0-9]/gi, '_')}_metadata.xml`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
