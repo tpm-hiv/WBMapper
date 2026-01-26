@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warner Mapper</title>
+    <title>WarnerMapper v2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -575,17 +575,36 @@
             margin-top: 2px;
         }
 
+        /* Override tmdb-name color for invalid/similar state */
+        .validation-item.invalid .tmdb-name {
+            color: #fbbf24;
+        }
+
+        /* Override tmdb-name color for not-found state */
+        .validation-item.not-found .tmdb-name {
+            color: #f87171;
+        }
+
         .validation-name .tmdb-match {
-            color: var(--text-muted);
+            color: #10b981;
             font-size: 0.75rem;
             margin-top: 2px;
-            opacity: 0.7;
+            opacity: 0.8;
         }
 
         .validation-name .tmdb-role {
-            color: var(--text-muted);
+            color: #10b981;
             font-size: 0.7rem;
-            opacity: 0.6;
+            opacity: 0.7;
+        }
+
+        /* Override tmdb-role color for different states */
+        .validation-item.accent-warning .tmdb-role {
+            color: #a78bfa;
+        }
+
+        .validation-item.invalid .tmdb-role {
+            color: #fbbf24;
         }
 
         .validation-name .tmdb-role-diff {
@@ -612,8 +631,8 @@
             display: inline-block;
             font-size: 0.65rem;
             font-weight: 500;
-            color: var(--text-muted);
-            background: rgba(255, 255, 255, 0.08);
+            color: #93c5fd;
+            background: rgba(59, 130, 246, 0.15);
             padding: 2px 6px;
             border-radius: 3px;
             margin-left: 8px;
@@ -640,6 +659,11 @@
             flex-shrink: 0;
         }
 
+        .validation-action-multi {
+            display: flex;
+            gap: 6px;
+        }
+
         .validation-btn {
             padding: 4px 10px;
             font-size: 0.7rem;
@@ -663,6 +687,17 @@
             border-color: #8b5cf6;
         }
 
+        .validation-btn.fix-role {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .validation-btn.fix-role:hover {
+            background: rgba(251, 191, 36, 0.4);
+            border-color: #fbbf24;
+        }
+
         .validation-btn.delete {
             background: rgba(239, 68, 68, 0.2);
             color: #f87171;
@@ -674,11 +709,45 @@
             border-color: #ef4444;
         }
 
+        .validation-btn.add {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .validation-btn.add:hover {
+            background: rgba(59, 130, 246, 0.4);
+            border-color: #3b82f6;
+        }
+
         .validation-btn.applied {
             background: rgba(16, 185, 129, 0.2);
             color: #34d399;
             border: 1px solid rgba(16, 185, 129, 0.3);
             cursor: default;
+        }
+
+        .validation-item.suggestion {
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .validation-item.suggestion .validation-status {
+            color: #60a5fa;
+            font-weight: bold;
+        }
+
+        .validation-subsection {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .validation-subsection-title {
+            font-size: 0.7rem;
+            color: #60a5fa;
+            margin-bottom: 8px;
+            padding-left: 5px;
         }
 
         .validation-section {
@@ -2502,14 +2571,30 @@
                         
                         const charHtml = character ? `<span class="role-tag">${character}</span>` : '';
                         
-                        // Check if character names differ (normalize for comparison)
+                        // Check if character names differ (with some tolerance for variations)
                         const hasCharacterDiff = character && tmdbCharacter && 
-                            normalizeName(character) !== normalizeName(tmdbCharacter);
+                            !areCharactersEquivalent(character, tmdbCharacter);
                         
                         if (match.score >= 0.85) {
                             const hasAccentIssue = hasAccentDifference(name, match.original);
                             
-                            if (hasAccentIssue) {
+                            if (hasAccentIssue && hasCharacterDiff) {
+                                // Both name and role need fixing
+                                html += `
+                                    <div class="validation-item accent-warning">
+                                        <span class="validation-status">◐</span>
+                                        <div class="validation-name">
+                                            <div class="excel-name">${name} ${charHtml}</div>
+                                            <div class="tmdb-name">TMDB: ${match.original} <span class="tmdb-role-diff">(${tmdbCharacter})</span></div>
+                                        </div>
+                                        <div class="validation-action validation-action-multi">
+                                            <button class="validation-btn fix" onclick="fixName('cast', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix Name</button>
+                                            <button class="validation-btn fix-role" onclick="fixRole('cast', '${escapeQuotes(name)}', '${escapeQuotes(character)}', '${escapeQuotes(tmdbCharacter)}', this)">Fix Role</button>
+                                        </div>
+                                    </div>
+                                `;
+                            } else if (hasAccentIssue) {
+                                // Only name needs fixing
                                 html += `
                                     <div class="validation-item accent-warning">
                                         <span class="validation-status">◐</span>
@@ -2518,12 +2603,12 @@
                                             <div class="tmdb-name">TMDB: ${match.original}${tmdbCharacter ? ` <span class="tmdb-role">(${tmdbCharacter})</span>` : ''}</div>
                                         </div>
                                         <div class="validation-action">
-                                            <button class="validation-btn fix" onclick="fixName('cast', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix</button>
+                                            <button class="validation-btn fix" onclick="fixName('cast', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix Name</button>
                                         </div>
                                     </div>
                                 `;
                             } else if (hasCharacterDiff) {
-                                // Name matches but character differs
+                                // Only role needs fixing
                                 html += `
                                     <div class="validation-item role-warning">
                                         <span class="validation-status"><span class="status-ok">✓</span></span>
@@ -2531,9 +2616,13 @@
                                             <div class="excel-name">${name} ${charHtml}</div>
                                             <div class="tmdb-match">↳ ${match.original} <span class="tmdb-role-diff">(TMDB: ${tmdbCharacter})</span></div>
                                         </div>
+                                        <div class="validation-action">
+                                            <button class="validation-btn fix-role" onclick="fixRole('cast', '${escapeQuotes(name)}', '${escapeQuotes(character)}', '${escapeQuotes(tmdbCharacter)}', this)">Fix Role</button>
+                                        </div>
                                     </div>
                                 `;
                             } else {
+                                // Both name and role are valid
                                 html += `
                                     <div class="validation-item valid">
                                         <span class="validation-status"><span class="status-ok">✓</span></span>
@@ -2553,7 +2642,7 @@
                                         <div class="tmdb-name">Similar: ${match.original || 'N/A'}${tmdbCharacter ? ` <span class="tmdb-role">(${tmdbCharacter})</span>` : ''}</div>
                                     </div>
                                     <div class="validation-action">
-                                        <button class="validation-btn fix" onclick="fixName('cast', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix</button>
+                                        <button class="validation-btn fix" onclick="fixName('cast', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix Name</button>
                                     </div>
                                 </div>
                             `;
@@ -2570,7 +2659,7 @@
                                             <div class="tmdb-name">TMDB: ${aliasResult.tmdbName}</div>
                                         </div>
                                         <div class="validation-action">
-                                            <button class="validation-btn fix" onclick="fixName('cast', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(aliasResult.tmdbName)}', this)">Fix</button>
+                                            <button class="validation-btn fix" onclick="fixName('cast', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(aliasResult.tmdbName)}', this)">Fix Name</button>
                                         </div>
                                     </div>
                                 `;
@@ -2589,6 +2678,57 @@
                                 `;
                             }
                         }
+                    }
+                    
+                    // Check for missing top cast from TMDB (top 5)
+                    const xmlCastNormalized = castNames.map(c => normalizeName(c.name));
+                    const missingTopCast = [];
+                    const topN = Math.min(5, tmdbCastFull.length);
+                    
+                    for (let i = 0; i < topN; i++) {
+                        const tmdbPerson = tmdbCastFull[i];
+                        const tmdbNormalized = tmdbPerson.normalized;
+                        
+                        // Check if this person is in XML (with fuzzy matching)
+                        let found = false;
+                        for (const xmlNorm of xmlCastNormalized) {
+                            const similarity = stringSimilarity(xmlNorm, tmdbNormalized);
+                            if (similarity >= 0.85) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!found) {
+                            missingTopCast.push({
+                                name: tmdbPerson.name,
+                                character: tmdbPerson.character,
+                                order: i + 1
+                            });
+                        }
+                    }
+                    
+                    // Show missing cast suggestions
+                    if (missingTopCast.length > 0) {
+                        html += `<div class="validation-subsection">`;
+                        html += `<div class="validation-subsection-title">⚠️ Missing from TMDB top 5</div>`;
+                        
+                        for (const missing of missingTopCast) {
+                            html += `
+                                <div class="validation-item suggestion">
+                                    <span class="validation-status">+</span>
+                                    <div class="validation-name">
+                                        <div class="excel-name">${missing.name} <span class="role-tag">${missing.character}</span></div>
+                                        <div class="tmdb-name">TMDB #${missing.order}</div>
+                                    </div>
+                                    <div class="validation-action">
+                                        <button class="validation-btn add" onclick="addCastMember('${escapeQuotes(missing.name)}', '${escapeQuotes(missing.character)}', this)">Add</button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        html += `</div>`;
                     }
                     
                     html += `</div>`;
@@ -2611,15 +2751,29 @@
                         
                         const roleHtml = roles ? `<span class="role-tag">${roles}</span>` : '';
                         
-                        // Check if job/role differs (normalize for comparison)
-                        const normalizedRole = roles ? normalizeName(roles) : '';
-                        const normalizedTmdbJob = tmdbJob ? normalizeName(tmdbJob) : '';
-                        const hasRoleDiff = roles && tmdbJob && normalizedRole !== normalizedTmdbJob;
+                        // Check if job/role differs (using equivalence check)
+                        const hasRoleDiff = roles && tmdbJob && !areRolesEquivalent(roles, tmdbJob);
                         
                         if (match.score >= 0.85) {
                             const hasAccentIssue = hasAccentDifference(name, match.original);
                             
-                            if (hasAccentIssue) {
+                            if (hasAccentIssue && hasRoleDiff) {
+                                // Both name and role need fixing
+                                html += `
+                                    <div class="validation-item accent-warning">
+                                        <span class="validation-status">◐</span>
+                                        <div class="validation-name">
+                                            <div class="excel-name">${name} ${roleHtml}</div>
+                                            <div class="tmdb-name">TMDB: ${match.original} <span class="tmdb-role-diff">(${tmdbJob})</span></div>
+                                        </div>
+                                        <div class="validation-action validation-action-multi">
+                                            <button class="validation-btn fix" onclick="fixName('crew', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix Name</button>
+                                            <button class="validation-btn fix-role" onclick="fixRole('crew', '${escapeQuotes(name)}', '${escapeQuotes(roles)}', '${escapeQuotes(tmdbJob)}', this)">Fix Role</button>
+                                        </div>
+                                    </div>
+                                `;
+                            } else if (hasAccentIssue) {
+                                // Only name needs fixing
                                 html += `
                                     <div class="validation-item accent-warning">
                                         <span class="validation-status">◐</span>
@@ -2628,12 +2782,12 @@
                                             <div class="tmdb-name">TMDB: ${match.original}${tmdbJob ? ` <span class="tmdb-role">(${tmdbJob})</span>` : ''}</div>
                                         </div>
                                         <div class="validation-action">
-                                            <button class="validation-btn fix" onclick="fixName('crew', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix</button>
+                                            <button class="validation-btn fix" onclick="fixName('crew', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix Name</button>
                                         </div>
                                     </div>
                                 `;
                             } else if (hasRoleDiff) {
-                                // Name matches but job differs
+                                // Only role needs fixing
                                 html += `
                                     <div class="validation-item role-warning">
                                         <span class="validation-status"><span class="status-ok">✓</span></span>
@@ -2641,9 +2795,13 @@
                                             <div class="excel-name">${name} ${roleHtml}</div>
                                             <div class="tmdb-match">↳ ${match.original} <span class="tmdb-role-diff">(TMDB: ${tmdbJob})</span></div>
                                         </div>
+                                        <div class="validation-action">
+                                            <button class="validation-btn fix-role" onclick="fixRole('crew', '${escapeQuotes(name)}', '${escapeQuotes(roles)}', '${escapeQuotes(tmdbJob)}', this)">Fix Role</button>
+                                        </div>
                                     </div>
                                 `;
                             } else {
+                                // Both name and role are valid
                                 html += `
                                     <div class="validation-item valid">
                                         <span class="validation-status"><span class="status-ok">✓</span></span>
@@ -2663,7 +2821,7 @@
                                         <div class="tmdb-name">Similar: ${match.original || 'N/A'}${tmdbJob ? ` <span class="tmdb-role">(${tmdbJob})</span>` : ''}</div>
                                     </div>
                                     <div class="validation-action">
-                                        <button class="validation-btn fix" onclick="fixName('crew', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix</button>
+                                        <button class="validation-btn fix" onclick="fixName('crew', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix Name</button>
                                     </div>
                                 </div>
                             `;
@@ -2680,7 +2838,7 @@
                                             <div class="tmdb-name">TMDB: ${aliasResult.tmdbName}</div>
                                         </div>
                                         <div class="validation-action">
-                                            <button class="validation-btn fix" onclick="fixName('crew', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(aliasResult.tmdbName)}', this)">Fix</button>
+                                            <button class="validation-btn fix" onclick="fixName('crew', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(aliasResult.tmdbName)}', this)">Fix Name</button>
                                         </div>
                                     </div>
                                 `;
@@ -2790,6 +2948,93 @@
                 .replace(/[^a-z\s]/g, '') // Remove non-letters
                 .replace(/\s+/g, ' ')
                 .trim();
+        }
+
+        // iTunes only allows these crew roles
+        const ITUNES_ALLOWED_ROLES = ['Co-Director', 'Director', 'Producer', 'Screenwriter', 'Composer', 'Dub Artist'];
+        
+        // Map any role to iTunes allowed role
+        function mapToItunesRole(role) {
+            if (!role) return null;
+            const normalized = role.toLowerCase().trim();
+            
+            // Dub Artist (check first since "dub director" should be Dub Artist, not Director)
+            if (normalized.includes('dub') || normalized.includes('doublage')) return 'Dub Artist';
+            
+            // Director family
+            if (normalized.includes('director') && (normalized.includes('co') || normalized.includes('co-'))) return 'Co-Director';
+            if (normalized.includes('director') || normalized === 'réalisateur') return 'Director';
+            
+            // Producer family (all producer types become Producer)
+            if (normalized.includes('producer') || normalized.includes('producteur')) return 'Producer';
+            
+            // Writer family (all become Screenwriter)
+            if (normalized.includes('writer') || normalized.includes('screenplay') || 
+                normalized.includes('scénariste') || normalized.includes('screenwriter') ||
+                normalized.includes('scenarist')) return 'Screenwriter';
+            
+            // Composer
+            if (normalized.includes('composer') || normalized.includes('compositeur') ||
+                normalized.includes('music by') || normalized.includes('original music')) return 'Composer';
+            
+            // If no mapping found, return null
+            return null;
+        }
+
+        // Check if roles are equivalent (for crew validation)
+        function areRolesEquivalent(xmlRole, tmdbRole) {
+            if (!xmlRole || !tmdbRole) return false;
+            
+            const normalizedXml = normalizeName(xmlRole);
+            const normalizedTmdb = normalizeName(tmdbRole);
+            
+            // Exact match
+            if (normalizedXml === normalizedTmdb) return true;
+            
+            // Define equivalent role groups
+            const producerRoles = ['producer', 'executive producer', 'co producer', 'coproducer'];
+            const writerRoles = ['writer', 'screenplay', 'screenwriter', 'writers assistant'];
+            const directorRoles = ['director', 'co director', 'codirector'];
+            
+            // Check if both are in the same producer family
+            const isXmlProducer = producerRoles.some(r => normalizedXml.includes(r));
+            const isTmdbProducer = producerRoles.some(r => normalizedTmdb.includes(r));
+            if (isXmlProducer && isTmdbProducer) return true;
+            
+            // Check if both are in the same writer family
+            const isXmlWriter = writerRoles.some(r => normalizedXml.includes(r));
+            const isTmdbWriter = writerRoles.some(r => normalizedTmdb.includes(r));
+            if (isXmlWriter && isTmdbWriter) return true;
+            
+            // If XML has multiple roles (comma-separated in original), check if TMDB role is one of them
+            // Example: "Director, Writer" contains "Director"
+            // Split the original role string before normalizing
+            const xmlRoleParts = xmlRole.split(/,\s*/).map(r => normalizeName(r.trim()));
+            if (xmlRoleParts.length > 1) {
+                // Check if TMDB role matches any of the XML roles
+                if (xmlRoleParts.includes(normalizedTmdb)) return true;
+                
+                // Check if TMDB role is in the same family as any XML role
+                for (const xmlR of xmlRoleParts) {
+                    // Director family
+                    if (directorRoles.includes(xmlR) && directorRoles.includes(normalizedTmdb)) return true;
+                    // Writer family  
+                    if (writerRoles.some(w => xmlR.includes(w)) && writerRoles.some(w => normalizedTmdb.includes(w))) return true;
+                    // Producer family
+                    if (producerRoles.some(p => xmlR.includes(p)) && producerRoles.some(p => normalizedTmdb.includes(p))) return true;
+                }
+            }
+            
+            return false;
+        }
+
+        // Check if character names are equivalent (for cast validation)
+        function areCharactersEquivalent(xmlChar, tmdbChar) {
+            if (!xmlChar || !tmdbChar) return false;
+            
+            // For character names, we want exact match (case-sensitive, accent-sensitive)
+            // "PAUL" is different from "Paul", "Élisabeth" is different from "Elisabeth"
+            return xmlChar.trim() === tmdbChar.trim();
         }
 
         // Parse Excel cast data for validation
@@ -3194,7 +3439,7 @@
         <display_name>${member.actor}</display_name>
         <characters>
           <character>
-            <reference_id>${member.character.toUpperCase().replace(/\s+/g, '_')}</reference_id>
+            <reference_id>${sanitizeReferenceId(member.character)}</reference_id>
             <character_name>${member.character}</character_name>
           </character>
         </characters>
@@ -3221,14 +3466,6 @@
         function parseCrew(crewData) {
             if (!crewData || crewData.length === 0) return '';
             
-            // Map French roles to English
-            const roleMap = {
-                'Réalisateur': 'Director',
-                'Scénariste': 'Writer',
-                'Producteur': 'Producer',
-                'Producteurs Exécutifs': 'Executive Producer'
-            };
-            
             // List of production company indicators
             const productionIndicators = ['Productions', 'Production', 'Films', 'Studio', 'Entertainment', 'Pictures', 'PRODUCTIONS'];
             
@@ -3238,7 +3475,9 @@
             crewData.forEach(crewEntry => {
                 if (!crewEntry.names) return;
                 
-                const englishRole = roleMap[crewEntry.role] || crewEntry.role;
+                // Map to iTunes role
+                const itunesRole = mapToItunesRole(crewEntry.role);
+                if (!itunesRole) return; // Skip roles that don't map to iTunes
                 
                 // Split the names by line breaks first
                 const lines = crewEntry.names.split(/[\r\n]+/).filter(line => line.trim() !== '');
@@ -3320,8 +3559,8 @@
                             if (!crewByName[properName]) {
                                 crewByName[properName] = [];
                             }
-                            if (!crewByName[properName].includes(englishRole)) {
-                                crewByName[properName].push(englishRole);
+                            if (!crewByName[properName].includes(itunesRole)) {
+                                crewByName[properName].push(itunesRole);
                             }
                         });
                     });
@@ -3391,14 +3630,144 @@
             // Update the validation item
             const item = button.closest('.validation-item');
             if (item) {
-                item.classList.remove('accent-warning');
-                item.classList.add('valid');
-                item.querySelector('.validation-status').textContent = '✓';
-                item.querySelector('.excel-name').textContent = newName;
+                // Mark name as fixed
+                item.dataset.nameFixed = 'true';
+                
+                // Update the excel-name but preserve any role-tag
+                const excelNameEl = item.querySelector('.excel-name');
+                const roleTag = excelNameEl ? excelNameEl.querySelector('.role-tag') : null;
+                const roleTagHtml = roleTag ? ` ${roleTag.outerHTML}` : '';
+                if (excelNameEl) {
+                    excelNameEl.innerHTML = newName + roleTagHtml;
+                }
+                
                 const tmdbNameEl = item.querySelector('.tmdb-name');
                 if (tmdbNameEl) {
-                    tmdbNameEl.remove();
+                    // Preserve role-diff if it exists
+                    const roleDiffEl = tmdbNameEl.querySelector('.tmdb-role-diff');
+                    const roleDiffHtml = roleDiffEl ? ` ${roleDiffEl.outerHTML}` : '';
+                    
+                    // Update to show matched name
+                    tmdbNameEl.className = 'tmdb-match';
+                    tmdbNameEl.innerHTML = `↳ ${newName}${roleDiffHtml}`;
                 }
+                
+                // Check if there's a fix-role button that hasn't been clicked yet
+                const fixRoleBtn = item.querySelector('.validation-btn.fix-role:not(.applied)');
+                if (!fixRoleBtn) {
+                    // No role button (or already applied), so we're fully done
+                    item.classList.remove('accent-warning', 'invalid');
+                    item.classList.add('valid');
+                    item.querySelector('.validation-status').innerHTML = '<span class="status-ok">✓</span>';
+                } else if (item.dataset.roleFixed === 'true') {
+                    // Both are now fixed
+                    item.classList.remove('accent-warning', 'invalid', 'role-warning');
+                    item.classList.add('valid');
+                    item.querySelector('.validation-status').innerHTML = '<span class="status-ok">✓</span>';
+                }
+                // Otherwise, keep current styling until role is also fixed
+            }
+        }
+
+        // Fix role/character name in XML
+        function fixRole(type, personName, oldRole, newRole, button) {
+            if (!generatedXML) {
+                alert('Please generate XML first');
+                return;
+            }
+            
+            const escapedPersonName = personName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const escapedOldRole = oldRole.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            
+            if (type === 'cast') {
+                // For cast, replace character_name within the cast_member block containing this person
+                // Also update the reference_id to match the new character name
+                const newReferenceId = sanitizeReferenceId(newRole);
+                const oldReferenceId = sanitizeReferenceId(oldRole);
+                const escapedOldRefId = oldReferenceId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                
+                // First, replace the reference_id
+                const refIdRegex = new RegExp(
+                    `(<cast_member>[\\s\\S]*?<display_name>${escapedPersonName}</display_name>[\\s\\S]*?<reference_id>)${escapedOldRefId}(</reference_id>[\\s\\S]*?</cast_member>)`,
+                    'gi'
+                );
+                generatedXML = generatedXML.replace(refIdRegex, `$1${newReferenceId}$2`);
+                
+                // Then, replace the character_name
+                const charNameRegex = new RegExp(
+                    `(<cast_member>[\\s\\S]*?<display_name>${escapedPersonName}</display_name>[\\s\\S]*?<character_name>)${escapedOldRole}(</character_name>[\\s\\S]*?</cast_member>)`,
+                    'gi'
+                );
+                generatedXML = generatedXML.replace(charNameRegex, `$1${newRole}$2`);
+            } else {
+                // For crew, map TMDB role to iTunes-compatible role
+                const itunesRole = mapToItunesRole(newRole) || newRole;
+                
+                // Replace the role within the crew_member block containing this person
+                const blockRegex = new RegExp(
+                    `(<crew_member>[\\s\\S]*?<display_name>${escapedPersonName}</display_name>[\\s\\S]*?<role>)${escapedOldRole}(</role>[\\s\\S]*?</crew_member>)`,
+                    'gi'
+                );
+                generatedXML = generatedXML.replace(blockRegex, `$1${itunesRole}$2`);
+                
+                // Update newRole to itunesRole for UI update
+                newRole = itunesRole;
+            }
+            
+            // Update the XML display
+            document.getElementById('xmlOutput').innerHTML = highlightXML(generatedXML);
+            
+            // Also update the textarea if in edit mode
+            const xmlEditor = document.getElementById('xmlEditor');
+            if (xmlEditor) {
+                xmlEditor.value = generatedXML;
+            }
+            
+            // Update button state
+            button.textContent = 'Fixed';
+            button.classList.remove('fix-role');
+            button.classList.add('applied');
+            button.onclick = null;
+            
+            // Update the validation item
+            const item = button.closest('.validation-item');
+            if (item) {
+                // Mark role as fixed
+                item.dataset.roleFixed = 'true';
+                
+                // Update role tag to show new role
+                const roleTag = item.querySelector('.role-tag');
+                if (roleTag) {
+                    roleTag.textContent = newRole;
+                }
+                
+                // Update the tmdb-role-diff to tmdb-role
+                const tmdbRoleDiff = item.querySelector('.tmdb-role-diff');
+                if (tmdbRoleDiff) {
+                    tmdbRoleDiff.className = 'tmdb-role';
+                    tmdbRoleDiff.textContent = `(${newRole})`;
+                }
+                
+                // Check if there's a fix-name button that hasn't been clicked yet
+                const fixNameBtn = item.querySelector('.validation-btn.fix:not(.applied)');
+                if (!fixNameBtn) {
+                    // No name button (or already applied), so we're fully done
+                    item.classList.remove('role-warning', 'accent-warning');
+                    item.classList.add('valid');
+                    const statusEl = item.querySelector('.validation-status');
+                    if (statusEl) {
+                        statusEl.innerHTML = '<span class="status-ok">✓</span>';
+                    }
+                } else if (item.dataset.nameFixed === 'true') {
+                    // Both are now fixed
+                    item.classList.remove('role-warning', 'accent-warning', 'invalid');
+                    item.classList.add('valid');
+                    const statusEl = item.querySelector('.validation-status');
+                    if (statusEl) {
+                        statusEl.innerHTML = '<span class="status-ok">✓</span>';
+                    }
+                }
+                // Otherwise, keep current styling until name is also fixed
             }
         }
 
@@ -3486,6 +3855,87 @@
                 item.style.opacity = '0.5';
                 item.style.textDecoration = 'line-through';
             }
+        }
+
+        // Add a cast member to the XML
+        function addCastMember(name, character, button) {
+            if (!generatedXML) {
+                alert('Please generate XML first');
+                return;
+            }
+            
+            // Determine schema version from XML
+            const is52 = generatedXML.includes('version="film5.2"');
+            
+            // Create the cast member XML
+            let castMemberXml;
+            if (is52) {
+                castMemberXml = `
+      <cast_member>
+        <display_name>${name}</display_name>
+        <character_name>${character}</character_name>
+      </cast_member>`;
+            } else {
+                const referenceId = sanitizeReferenceId(character);
+                castMemberXml = `
+      <cast_member>
+        <display_name>${name}</display_name>
+        <characters>
+          <character>
+            <reference_id>${referenceId}</reference_id>
+            <character_name>${character}</character_name>
+          </character>
+        </characters>
+      </cast_member>`;
+            }
+            
+            // Find the </cast> closing tag and insert before it
+            const castEndRegex = /(\s*)<\/cast>/;
+            if (castEndRegex.test(generatedXML)) {
+                generatedXML = generatedXML.replace(castEndRegex, castMemberXml + '\n    </cast>');
+            } else {
+                alert('Could not find cast section in XML');
+                return;
+            }
+            
+            // Update the XML display
+            document.getElementById('xmlOutput').innerHTML = highlightXML(generatedXML);
+            
+            // Also update the textarea if in edit mode
+            const xmlEditor = document.getElementById('xmlEditor');
+            if (xmlEditor) {
+                xmlEditor.value = generatedXML;
+            }
+            
+            // Update button state
+            button.textContent = 'Added';
+            button.classList.remove('add');
+            button.classList.add('applied');
+            button.onclick = null;
+            
+            // Update the validation item
+            const item = button.closest('.validation-item');
+            if (item) {
+                item.classList.remove('suggestion');
+                item.classList.add('valid');
+                const statusEl = item.querySelector('.validation-status');
+                if (statusEl) {
+                    statusEl.innerHTML = '<span class="status-ok">✓</span>';
+                }
+            }
+        }
+
+        // Sanitize reference ID: only alphanumeric and underscores allowed
+        function sanitizeReferenceId(str) {
+            if (!str) return '';
+            return str
+                .toUpperCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '') // Remove accent marks
+                .replace(/[^A-Z0-9\s]/g, '')     // Remove non-alphanumeric except spaces
+                .replace(/\s+/g, '_')             // Replace spaces with underscores
+                .replace(/_+/g, '_')              // Collapse multiple underscores
+                .replace(/^_|_$/g, '');           // Remove leading/trailing underscores
         }
 
         function escapeXml(unsafe) {
