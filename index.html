@@ -613,6 +613,16 @@
             font-weight: 500;
         }
 
+        .validation-name .tmdb-suggestion {
+            color: #10b981;
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        .validation-name .tmdb-suggestion strong {
+            color: #34d399;
+        }
+
         .validation-name .character-name {
             color: var(--text-muted);
             font-size: 0.8rem;
@@ -971,19 +981,17 @@
         }
 
         .btn-success {
-            background: linear-gradient(135deg, var(--accent-blue) 0%, #2563eb 100%);
-            color: white;
-            box-shadow: 
-                0 8px 30px var(--accent-blue-glow),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue-light);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            box-shadow: 0 4px 15px var(--accent-blue-glow);
         }
 
         .btn-success:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 
-                0 15px 40px rgba(59, 130, 246, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            filter: brightness(1.1);
+            background: rgba(59, 130, 246, 0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+            border-color: var(--accent-blue);
         }
 
         /* Output Container */
@@ -997,6 +1005,26 @@
             border: 1px solid var(--border-color);
             position: relative;
             overflow: hidden;
+        }
+
+        .output-container .backdrop-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.18;
+            pointer-events: none;
+            z-index: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .output-container .output-content {
+            position: relative;
+            z-index: 1;
         }
 
         .output-container::before {
@@ -1036,6 +1064,39 @@
             height: 20px;
             background: linear-gradient(180deg, var(--accent-blue), var(--accent-yellow));
             border-radius: 2px;
+        }
+
+        .output-title-row {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .btn-tmdb-validate {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(1, 180, 228, 0.15);
+            border: 1px solid rgba(1, 180, 228, 0.4);
+            border-radius: 8px;
+            color: #01b4e4;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-tmdb-validate:hover {
+            background: rgba(1, 180, 228, 0.25);
+            border-color: #01b4e4;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(1, 180, 228, 0.3);
+        }
+
+        .btn-tmdb-validate .tmdb-logo {
+            height: 14px;
+            width: auto;
         }
 
         /* Toggle Switch */
@@ -1102,7 +1163,7 @@
 
         /* Code Preview */
         pre {
-            background: var(--bg-primary);
+            background: rgba(15, 23, 42, 0.75);
             padding: 20px;
             border-radius: 12px;
             overflow-x: auto;
@@ -1115,6 +1176,7 @@
             overflow-y: auto;
             white-space: pre;
             word-wrap: normal;
+            backdrop-filter: blur(2px);
         }
 
         pre::-webkit-scrollbar {
@@ -1166,11 +1228,14 @@
             position: relative;
             min-height: 400px;
             max-height: 600px;
+            background: transparent;
         }
 
         .xml-output-wrapper pre {
             margin: 0;
             min-height: 400px;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(2px);
         }
 
         .xml-output-wrapper.edit-mode pre {
@@ -1446,29 +1511,38 @@
         </div>
 
         <div id="outputSection" class="output-container hidden">
-            <div class="output-header">
-                <h2>Generated iTunes XML</h2>
-                <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-                    <div class="schema-toggle">
-                        <span class="schema-label">5.2</span>
-                        <div class="toggle-switch active" id="schemaToggle" onclick="toggleSchema()">
-                            <div class="toggle-slider"></div>
-                        </div>
-                        <span class="schema-label">5.3</span>
+            <div class="backdrop-image" id="xmlBackdrop"></div>
+            <div class="output-content">
+                <div class="output-header">
+                    <div class="output-title-row">
+                        <h2>Generated iTunes XML</h2>
+                        <button class="btn-tmdb-validate" onclick="scrollToValidation()">
+                            <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg" alt="TMDB" class="tmdb-logo" />
+                            Validate
+                        </button>
                     </div>
-                    <div class="mode-toggle">
-                        <span class="mode-label active" id="previewLabel">Preview</span>
-                        <div class="toggle-switch" id="editToggle" onclick="toggleEditMode()">
-                            <div class="toggle-slider"></div>
+                    <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                        <div class="schema-toggle">
+                            <span class="schema-label">5.2</span>
+                            <div class="toggle-switch active" id="schemaToggle" onclick="toggleSchema()">
+                                <div class="toggle-slider"></div>
+                            </div>
+                            <span class="schema-label">5.3</span>
                         </div>
-                        <span class="mode-label" id="editLabel">Edit</span>
+                        <div class="mode-toggle">
+                            <span class="mode-label active" id="previewLabel">Preview</span>
+                            <div class="toggle-switch" id="editToggle" onclick="toggleEditMode()">
+                                <div class="toggle-slider"></div>
+                            </div>
+                            <span class="mode-label" id="editLabel">Edit</span>
+                        </div>
+                        <button class="btn-primary" onclick="downloadXML()">💾 Download XML</button>
                     </div>
-                    <button class="btn-primary" onclick="downloadXML()">💾 Download XML</button>
                 </div>
-            </div>
-            <div class="xml-output-wrapper">
-                <pre id="xmlOutput"></pre>
-                <textarea id="xmlEditor" class="xml-editor hidden" spellcheck="false"></textarea>
+                <div class="xml-output-wrapper">
+                    <pre id="xmlOutput"></pre>
+                    <textarea id="xmlEditor" class="xml-editor hidden" spellcheck="false"></textarea>
+                </div>
             </div>
         </div>
     </div>
@@ -1481,10 +1555,25 @@
         let processedMovies = [];
         let currentFileName = '';
         let schemaVersion = '5.3'; // Default to 5.3
+        let currentBackdropPath = ''; // Store current movie backdrop
 
         // TMDB API configuration
         const TMDB_API_KEY = '42dfe036a7664826cb47fc7a122825f3';
         const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
+        const TMDB_BACKDROP_BASE = 'https://image.tmdb.org/t/p/w1280';
+
+        // Set movie backdrop on XML output section
+        function setXmlBackdrop(backdropPath) {
+            const backdropEl = document.getElementById('xmlBackdrop');
+            if (backdropEl && backdropPath) {
+                const backdropUrl = `${TMDB_BACKDROP_BASE}${backdropPath}`;
+                backdropEl.style.backgroundImage = `url('${backdropUrl}')`;
+                currentBackdropPath = backdropPath;
+            } else if (backdropEl) {
+                backdropEl.style.backgroundImage = '';
+                currentBackdropPath = '';
+            }
+        }
 
         // Fetch movie poster from TMDB
         async function fetchMoviePoster(movieTitle, releaseYear = null) {
@@ -1529,6 +1618,9 @@
                         const movieYear = movie.release_date ? movie.release_date.substring(0, 4) : '';
                         const tmdbUrl = `https://www.themoviedb.org/movie/${movie.id}`;
                         
+                        // Set backdrop for XML output
+                        setXmlBackdrop(movie.backdrop_path);
+                        
                         posterContainer.innerHTML = `
                             <div style="display: flex; flex-direction: column; align-items: center;">
                                 <a href="${tmdbUrl}" target="_blank" rel="noopener noreferrer" class="poster-link">
@@ -1554,6 +1646,9 @@
                         const posterUrl = `${TMDB_IMAGE_BASE}${movie.poster_path}`;
                         const movieYear = movie.release_date ? movie.release_date.substring(0, 4) : '';
                         const tmdbUrl = `https://www.themoviedb.org/movie/${movie.id}`;
+                        
+                        // Set backdrop for XML output
+                        setXmlBackdrop(movie.backdrop_path);
                         
                         posterContainer.innerHTML = `
                             <div style="display: flex; flex-direction: column; align-items: center;">
@@ -2183,6 +2278,32 @@
             }).join(' ');
         }
 
+        // Translate character role terms from English to French
+        function translateCharacterRole(character) {
+            if (!character) return '';
+            
+            // Translation map for common role descriptors
+            const translations = {
+                '(voice)': '(voix)',
+                '(Voice)': '(voix)',
+                '(VOICE)': '(voix)',
+                ' voice)': ' voix)',
+                '(uncredited)': '(non crédité)',
+                '(Uncredited)': '(non crédité)',
+                '(archive footage)': '(images d\'archives)',
+                '(Archive footage)': '(images d\'archives)',
+                '(cameo)': '(caméo)',
+                '(Cameo)': '(caméo)'
+            };
+            
+            let translated = character;
+            for (const [eng, fr] of Object.entries(translations)) {
+                translated = translated.replace(new RegExp(eng.replace(/[()]/g, '\\$&'), 'gi'), fr);
+            }
+            
+            return translated;
+        }
+
         // Setup drag and drop
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
@@ -2266,7 +2387,8 @@
                         mainRowIndex: i,
                         title: row[7],
                         data: row,
-                        crew: []
+                        crew: [],
+                        castFromRows: [] // Cast collected from separate rows (P/Q pattern)
                     };
                     
                     // IMPORTANT: Check if the main row has a director
@@ -2277,13 +2399,37 @@
                         });
                     }
                     
-                    // Collect crew from subsequent rows
-                    for (let j = i + 1; j <= i + 4 && j < excelData.length; j++) {
-                        const crewRow = excelData[j];
-                        if (crewRow && crewRow[17] && crewRow[18]) { // Column R has crew role and S has names
+                    // Check if main row has cast in separate column format (P = actor, Q = role)
+                    if (row[15] && row[16] && String(row[16]).includes('Rôle')) {
+                        const role = String(row[16]).replace(/^Rôle\s*:\s*/i, '').trim();
+                        movie.castFromRows.push({
+                            actor: row[15],
+                            character: role
+                        });
+                    }
+                    
+                    // Collect crew and cast from subsequent rows
+                    for (let j = i + 1; j <= i + 20 && j < excelData.length; j++) {
+                        const subRow = excelData[j];
+                        if (!subRow) continue;
+                        
+                        // Stop if we hit another movie (has title in column H)
+                        if (subRow[7] && j > i) break;
+                        
+                        // Collect crew from Column R and S
+                        if (subRow[17] && subRow[18]) {
                             movie.crew.push({
-                                role: crewRow[17],
-                                names: crewRow[18]
+                                role: subRow[17],
+                                names: subRow[18]
+                            });
+                        }
+                        
+                        // Collect cast from Column P and Q (actor + "Rôle : Character" pattern)
+                        if (subRow[15] && subRow[16] && String(subRow[16]).includes('Rôle')) {
+                            const role = String(subRow[16]).replace(/^Rôle\s*:\s*/i, '').trim();
+                            movie.castFromRows.push({
+                                actor: subRow[15],
+                                character: role
                             });
                         }
                     }
@@ -2456,6 +2602,18 @@
             }
         }
 
+        // Scroll to validation section and trigger validation
+        function scrollToValidation() {
+            const validationPanel = document.getElementById('validationList').closest('.panel');
+            if (validationPanel) {
+                validationPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Trigger validation after a short delay
+                setTimeout(() => {
+                    validateFromXML();
+                }, 300);
+            }
+        }
+
         // Validate cast and crew from generated XML against TMDB
         async function validateFromXML() {
             if (!generatedXML) {
@@ -2524,6 +2682,11 @@
                 const tmdbMovie = searchData.results[0];
                 const movieId = tmdbMovie.id;
                 
+                // Set backdrop for XML output
+                if (tmdbMovie.backdrop_path) {
+                    setXmlBackdrop(tmdbMovie.backdrop_path);
+                }
+                
                 // Fetch credits (cast and crew)
                 const creditsUrl = `https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${TMDB_API_KEY}&language=fr-FR`;
                 const creditsResponse = await fetch(creditsUrl);
@@ -2568,6 +2731,7 @@
                         
                         // Get TMDB character if we have a match
                         const tmdbCharacter = (match.index >= 0 && tmdbCastFull[match.index]) ? tmdbCastFull[match.index].character : '';
+                        const tmdbCharacterDisplay = translateCharacterRole(tmdbCharacter);
                         
                         const charHtml = character ? `<span class="role-tag">${character}</span>` : '';
                         
@@ -2585,11 +2749,11 @@
                                         <span class="validation-status">◐</span>
                                         <div class="validation-name">
                                             <div class="excel-name">${name} ${charHtml}</div>
-                                            <div class="tmdb-name">TMDB: ${match.original} <span class="tmdb-role-diff">(${tmdbCharacter})</span></div>
+                                            <div class="tmdb-name">TMDB: ${match.original} <span class="tmdb-role-diff">(${tmdbCharacterDisplay})</span></div>
                                         </div>
                                         <div class="validation-action validation-action-multi">
                                             <button class="validation-btn fix" onclick="fixName('cast', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix Name</button>
-                                            <button class="validation-btn fix-role" onclick="fixRole('cast', '${escapeQuotes(name)}', '${escapeQuotes(character)}', '${escapeQuotes(tmdbCharacter)}', this)">Fix Role</button>
+                                            <button class="validation-btn fix-role" onclick="fixRole('cast', '${escapeQuotes(name)}', '${escapeQuotes(character)}', '${escapeQuotes(tmdbCharacterDisplay)}', this)">Fix Role</button>
                                         </div>
                                     </div>
                                 `;
@@ -2600,7 +2764,7 @@
                                         <span class="validation-status">◐</span>
                                         <div class="validation-name">
                                             <div class="excel-name">${name} ${charHtml}</div>
-                                            <div class="tmdb-name">TMDB: ${match.original}${tmdbCharacter ? ` <span class="tmdb-role">(${tmdbCharacter})</span>` : ''}</div>
+                                            <div class="tmdb-name">TMDB: ${match.original}${tmdbCharacter ? ` <span class="tmdb-role">(${tmdbCharacterDisplay})</span>` : ''}</div>
                                         </div>
                                         <div class="validation-action">
                                             <button class="validation-btn fix" onclick="fixName('cast', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix Name</button>
@@ -2614,10 +2778,10 @@
                                         <span class="validation-status"><span class="status-ok">✓</span></span>
                                         <div class="validation-name">
                                             <div class="excel-name">${name} ${charHtml}</div>
-                                            <div class="tmdb-match">↳ ${match.original} <span class="tmdb-role-diff">(TMDB: ${tmdbCharacter})</span></div>
+                                            <div class="tmdb-match">↳ ${match.original} <span class="tmdb-role-diff">(TMDB: ${tmdbCharacterDisplay})</span></div>
                                         </div>
                                         <div class="validation-action">
-                                            <button class="validation-btn fix-role" onclick="fixRole('cast', '${escapeQuotes(name)}', '${escapeQuotes(character)}', '${escapeQuotes(tmdbCharacter)}', this)">Fix Role</button>
+                                            <button class="validation-btn fix-role" onclick="fixRole('cast', '${escapeQuotes(name)}', '${escapeQuotes(character)}', '${escapeQuotes(tmdbCharacterDisplay)}', this)">Fix Role</button>
                                         </div>
                                     </div>
                                 `;
@@ -2628,7 +2792,7 @@
                                         <span class="validation-status"><span class="status-ok">✓</span></span>
                                         <div class="validation-name">
                                             <div class="excel-name">${name} ${charHtml}</div>
-                                            <div class="tmdb-match">↳ ${match.original}${tmdbCharacter ? ` <span class="tmdb-role">(${tmdbCharacter})</span>` : ''}</div>
+                                            <div class="tmdb-match">↳ ${match.original}${tmdbCharacter ? ` <span class="tmdb-role">(${tmdbCharacterDisplay})</span>` : ''}</div>
                                         </div>
                                     </div>
                                 `;
@@ -2639,7 +2803,7 @@
                                     <span class="validation-status">≈</span>
                                     <div class="validation-name">
                                         <div class="excel-name">${name} ${charHtml}</div>
-                                        <div class="tmdb-name">Similar: ${match.original || 'N/A'}${tmdbCharacter ? ` <span class="tmdb-role">(${tmdbCharacter})</span>` : ''}</div>
+                                        <div class="tmdb-name">Similar: ${match.original || 'N/A'}${tmdbCharacter ? ` <span class="tmdb-role">(${tmdbCharacterDisplay})</span>` : ''}</div>
                                     </div>
                                     <div class="validation-action">
                                         <button class="validation-btn fix" onclick="fixName('cast', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix Name</button>
@@ -2718,11 +2882,11 @@
                                 <div class="validation-item suggestion">
                                     <span class="validation-status">+</span>
                                     <div class="validation-name">
-                                        <div class="excel-name">${missing.name} <span class="role-tag">${missing.character}</span></div>
+                                        <div class="excel-name">${missing.name} <span class="role-tag">${translateCharacterRole(missing.character)}</span></div>
                                         <div class="tmdb-name">TMDB #${missing.order}</div>
                                     </div>
                                     <div class="validation-action">
-                                        <button class="validation-btn add" onclick="addCastMember('${escapeQuotes(missing.name)}', '${escapeQuotes(missing.character)}', this)">Add</button>
+                                        <button class="validation-btn add" onclick="addCastMember('${escapeQuotes(missing.name)}', '${escapeQuotes(translateCharacterRole(missing.character))}', this)">Add</button>
                                     </div>
                                 </div>
                             `;
@@ -2738,6 +2902,18 @@
                 if (crewNames.length > 0) {
                     html += `<div class="validation-section">`;
                     html += `<div class="validation-section-title">Crew (${crewNames.length})</div>`;
+                    
+                    // Track which TMDB crew members have been matched
+                    const matchedTmdbCrewNames = new Set();
+                    
+                    // First pass: identify all valid matches
+                    for (const item of crewNames) {
+                        const normalizedName = normalizeName(item.name);
+                        const match = findBestMatch(normalizedName, tmdbCrewNormalized, tmdbCrewOriginal);
+                        if (match.score >= 0.85 && match.original) {
+                            matchedTmdbCrewNames.add(match.original.toLowerCase());
+                        }
+                    }
                     
                     for (let index = 0; index < crewNames.length; index++) {
                         const item = crewNames[index];
@@ -2813,18 +2989,58 @@
                                 `;
                             }
                         } else if (match.score >= 0.6) {
-                            html += `
-                                <div class="validation-item invalid">
-                                    <span class="validation-status">≈</span>
-                                    <div class="validation-name">
-                                        <div class="excel-name">${name} ${roleHtml}</div>
-                                        <div class="tmdb-name">Similar: ${match.original || 'N/A'}${tmdbJob ? ` <span class="tmdb-role">(${tmdbJob})</span>` : ''}</div>
+                            // Check if the similar match has a compatible role
+                            const similarHasCompatibleRole = roles && tmdbJob && areRolesEquivalent(roles, tmdbJob);
+                            
+                            if (similarHasCompatibleRole) {
+                                // Similar name with compatible role - suggest fixing name
+                                html += `
+                                    <div class="validation-item invalid">
+                                        <span class="validation-status">≈</span>
+                                        <div class="validation-name">
+                                            <div class="excel-name">${name} ${roleHtml}</div>
+                                            <div class="tmdb-name">Similar: ${match.original || 'N/A'}${tmdbJob ? ` <span class="tmdb-role">(${tmdbJob})</span>` : ''}</div>
+                                        </div>
+                                        <div class="validation-action">
+                                            <button class="validation-btn fix" onclick="fixName('crew', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix Name</button>
+                                        </div>
                                     </div>
-                                    <div class="validation-action">
-                                        <button class="validation-btn fix" onclick="fixName('crew', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(match.original)}', this)">Fix Name</button>
-                                    </div>
-                                </div>
-                            `;
+                                `;
+                            } else {
+                                // Similar name but WRONG role - suggest TMDB's actual person for this role
+                                const tmdbPersonForRole = findTmdbCrewByRole(roles, tmdbCrewFull, matchedTmdbCrewNames);
+                                
+                                if (tmdbPersonForRole) {
+                                    const suggestedRole = tmdbPersonForRole.forRole || roles;
+                                    html += `
+                                        <div class="validation-item not-found">
+                                            <span class="validation-status">✗</span>
+                                            <div class="validation-name">
+                                                <div class="excel-name">${name} ${roleHtml}</div>
+                                                <div class="tmdb-name">Not found as ${suggestedRole}</div>
+                                                <div class="tmdb-suggestion">TMDB ${suggestedRole}: <strong>${tmdbPersonForRole.name}</strong></div>
+                                            </div>
+                                            <div class="validation-action validation-action-multi">
+                                                <button class="validation-btn fix" onclick="fixName('crew', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(tmdbPersonForRole.name)}', this)">Replace</button>
+                                                <button class="validation-btn delete" onclick="deleteName('crew', ${index}, '${escapeQuotes(name)}', this)">Delete</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                } else {
+                                    html += `
+                                        <div class="validation-item not-found">
+                                            <span class="validation-status">✗</span>
+                                            <div class="validation-name">
+                                                <div class="excel-name">${name} ${roleHtml}</div>
+                                                <div class="tmdb-name">Not found in TMDB crew</div>
+                                            </div>
+                                            <div class="validation-action">
+                                                <button class="validation-btn delete" onclick="deleteName('crew', ${index}, '${escapeQuotes(name)}', this)">Delete</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+                            }
                         } else {
                             // Try alias search
                             const aliasResult = await searchPersonAlias(name, tmdbCrewIds);
@@ -2843,18 +3059,39 @@
                                     </div>
                                 `;
                             } else {
-                                html += `
-                                    <div class="validation-item not-found">
-                                        <span class="validation-status">✗</span>
-                                        <div class="validation-name">
-                                            <div class="excel-name">${name} ${roleHtml}</div>
-                                            <div class="tmdb-name">Not found in TMDB</div>
+                                // Not found - suggest TMDB's person for this role
+                                const tmdbPersonForRole = findTmdbCrewByRole(roles, tmdbCrewFull, matchedTmdbCrewNames);
+                                
+                                if (tmdbPersonForRole) {
+                                    const suggestedRole = tmdbPersonForRole.forRole || roles;
+                                    html += `
+                                        <div class="validation-item not-found">
+                                            <span class="validation-status">✗</span>
+                                            <div class="validation-name">
+                                                <div class="excel-name">${name} ${roleHtml}</div>
+                                                <div class="tmdb-name">Not found in TMDB</div>
+                                                <div class="tmdb-suggestion">TMDB ${suggestedRole}: <strong>${tmdbPersonForRole.name}</strong></div>
+                                            </div>
+                                            <div class="validation-action validation-action-multi">
+                                                <button class="validation-btn fix" onclick="fixName('crew', ${index}, '${escapeQuotes(name)}', '${escapeQuotes(tmdbPersonForRole.name)}', this)">Replace</button>
+                                                <button class="validation-btn delete" onclick="deleteName('crew', ${index}, '${escapeQuotes(name)}', this)">Delete</button>
+                                            </div>
                                         </div>
-                                        <div class="validation-action">
-                                            <button class="validation-btn delete" onclick="deleteName('crew', ${index}, '${escapeQuotes(name)}', this)">Delete</button>
+                                    `;
+                                } else {
+                                    html += `
+                                        <div class="validation-item not-found">
+                                            <span class="validation-status">✗</span>
+                                            <div class="validation-name">
+                                                <div class="excel-name">${name} ${roleHtml}</div>
+                                                <div class="tmdb-name">Not found in TMDB</div>
+                                            </div>
+                                            <div class="validation-action">
+                                                <button class="validation-btn delete" onclick="deleteName('crew', ${index}, '${escapeQuotes(name)}', this)">Delete</button>
+                                            </div>
                                         </div>
-                                    </div>
-                                `;
+                                    `;
+                                }
                             }
                         }
                     }
@@ -2950,6 +3187,49 @@
                 .trim();
         }
 
+        // Find TMDB crew member by role (optionally excluding already matched names)
+        function findTmdbCrewByRole(xmlRole, tmdbCrewFull, excludeNames = null) {
+            if (!xmlRole || !tmdbCrewFull) return null;
+            
+            // Handle multiple roles (e.g., "Director, Screenwriter")
+            const roles = xmlRole.split(/,\s*/).map(r => r.trim());
+            
+            // Define role mappings
+            const roleGroups = {
+                'director': ['Director', 'Co-Director'],
+                'co director': ['Co-Director', 'Director'],
+                'screenwriter': ['Writer', 'Screenplay', 'Screenwriter', 'Story', 'Author'],
+                'writer': ['Writer', 'Screenplay', 'Screenwriter', 'Story', 'Book', 'Novel', 'Author'],
+                'author': ['Writer', 'Screenplay', 'Screenwriter', 'Story', 'Book', 'Novel', 'Author'],
+                'producer': ['Producer', 'Executive Producer', 'Co-Producer'],
+                'executive producer': ['Executive Producer', 'Producer'],
+                'composer': ['Original Music Composer', 'Composer', 'Music']
+            };
+            
+            // Try each role, prioritizing Director
+            for (const role of roles) {
+                const normalizedRole = normalizeName(role);
+                
+                // Get the jobs to look for
+                let targetJobs = roleGroups[normalizedRole] || [role];
+                
+                // Find first crew member with matching role (excluding already matched names)
+                for (const job of targetJobs) {
+                    const found = tmdbCrewFull.find(c => {
+                        if (!c.job || c.job.toLowerCase() !== job.toLowerCase()) return false;
+                        // Skip if this person is already matched
+                        if (excludeNames && excludeNames.has(c.name.toLowerCase())) return false;
+                        return true;
+                    });
+                    if (found) {
+                        return { ...found, forRole: role };
+                    }
+                }
+            }
+            
+            return null;
+        }
+
         // iTunes only allows these crew roles
         const ITUNES_ALLOWED_ROLES = ['Co-Director', 'Director', 'Producer', 'Screenwriter', 'Composer', 'Dub Artist'];
         
@@ -2971,7 +3251,8 @@
             // Writer family (all become Screenwriter)
             if (normalized.includes('writer') || normalized.includes('screenplay') || 
                 normalized.includes('scénariste') || normalized.includes('screenwriter') ||
-                normalized.includes('scenarist')) return 'Screenwriter';
+                normalized.includes('scenarist') || normalized.includes('author') ||
+                normalized.includes('auteur')) return 'Screenwriter';
             
             // Composer
             if (normalized.includes('composer') || normalized.includes('compositeur') ||
@@ -2992,8 +3273,8 @@
             if (normalizedXml === normalizedTmdb) return true;
             
             // Define equivalent role groups
-            const producerRoles = ['producer', 'executive producer', 'co producer', 'coproducer'];
-            const writerRoles = ['writer', 'screenplay', 'screenwriter', 'writers assistant'];
+            const producerRoles = ['producer', 'executive producer', 'co producer', 'coproducer', 'production director'];
+            const writerRoles = ['writer', 'screenplay', 'screenwriter', 'writers assistant', 'book', 'novel', 'story', 'original story', 'author'];
             const directorRoles = ['director', 'co director', 'codirector'];
             
             // Check if both are in the same producer family
@@ -3045,17 +3326,91 @@
             const entries = castValue.split(/[\r\n]+/).filter(Boolean);
             
             entries.forEach(entry => {
-                // Handle dots separator - match 2+ regular dots OR 1+ ellipsis character (U+2026)
-                // Also handle mixed patterns like "..." or "…" or ".…" etc.
-                const dotsMatch = entry.match(/^(.+?)\s*(?:\.{2,}|[\u2026]+|\.[\u2026]|[\u2026]\.)\s*(.*)$/);
+                // Handle dots/ellipsis separator
+                // Matches: "...", "..", "…", " … ", "….." etc.
+                const dotsMatch = entry.match(/^(.+?)\s*(?:\.{2,}|…+|\.+…|…\.+)\s*(.+)$/);
                 if (dotsMatch) {
-                    cast.push({ name: toProperCase(dotsMatch[1].trim()), character: dotsMatch[2].trim() });
-                } else if (entry.includes('(') && entry.includes(')')) {
+                    // Clean leading dots/periods from character name
+                    const character = dotsMatch[2].replace(/^[\.…\s]+/, '').trim();
+                    cast.push({ name: toProperCase(dotsMatch[1].trim()), character: character });
+                } 
+                // Handle slash separator: "Name / Character"
+                else if (entry.includes(' / ')) {
+                    const parts = entry.split(' / ').map(s => s.trim());
+                    if (parts.length >= 2) {
+                        cast.push({ name: toProperCase(parts[0]), character: parts[1] });
+                    }
+                }
+                // Handle dash separator: "Name - Character"
+                else if (entry.includes(' - ')) {
+                    const parts = entry.split(' - ').map(s => s.trim());
+                    if (parts.length >= 2) {
+                        cast.push({ name: toProperCase(parts[0]), character: parts[1] });
+                    }
+                }
+                // Handle equals separator: "Name = Character"
+                else if (entry.includes(' = ')) {
+                    const parts = entry.split(' = ').map(s => s.trim());
+                    if (parts.length >= 2) {
+                        cast.push({ name: toProperCase(parts[0]), character: parts[1] });
+                    }
+                }
+                // Handle parentheses: "Name (Character)"
+                else if (entry.includes('(') && entry.includes(')')) {
                     const match = entry.match(/(.+?)\s*\(([^)]+)\)/);
                     if (match) {
                         cast.push({ name: toProperCase(match[1].trim()), character: match[2].trim() });
                     }
-                } else if (entry.trim()) {
+                }
+                // Handle colon separator: could be "Actor : Character" or "Character : Actor"
+                else if (entry.includes(' : ') || entry.includes(': ')) {
+                    const parts = entry.split(/\s*:\s*/).map(s => s.trim());
+                    if (parts.length >= 2) {
+                        // Heuristic to detect order:
+                        // - If first part looks like a full name (2+ words, both capitalized, no articles)
+                        //   and second part is simpler (1 word or starts with article), it's Actor : Character
+                        // - Otherwise, it's Character : Actor
+                        
+                        const firstWords = parts[0].split(/\s+/);
+                        const secondWords = parts[1].split(/\s+/);
+                        
+                        // Check if starts with French/English article (indicates character/role name)
+                        const articles = ['le', 'la', 'les', 'l\'', 'un', 'une', 'the', 'a', 'an'];
+                        const firstStartsWithArticle = articles.includes(firstWords[0].toLowerCase());
+                        const secondStartsWithArticle = articles.includes(secondWords[0].toLowerCase());
+                        
+                        // Count "name-like" words (capitalized, 2+ chars, not articles)
+                        const isNameWord = (w) => w.length >= 2 && /^[A-ZÀ-Ü]/.test(w) && !articles.includes(w.toLowerCase());
+                        const firstNameWords = firstWords.filter(isNameWord).length;
+                        const secondNameWords = secondWords.filter(isNameWord).length;
+                        
+                        // Decision logic:
+                        // - If first starts with article → Character : Actor
+                        // - If second starts with article → Actor : Character
+                        // - If first has 2+ name words and second has 0-1 → Actor : Character
+                        // - If second has 2+ name words and first has 0-1 → Character : Actor
+                        // - Default: Actor : Character (most common format)
+                        
+                        let isActorFirst = true; // Default
+                        
+                        if (firstStartsWithArticle && !secondStartsWithArticle) {
+                            isActorFirst = false; // Character : Actor
+                        } else if (secondStartsWithArticle && !firstStartsWithArticle) {
+                            isActorFirst = true; // Actor : Character
+                        } else if (firstNameWords >= 2 && secondNameWords <= 1) {
+                            isActorFirst = true; // Actor : Character
+                        } else if (secondNameWords >= 2 && firstNameWords <= 1) {
+                            isActorFirst = false; // Character : Actor
+                        }
+                        
+                        if (isActorFirst) {
+                            cast.push({ name: toProperCase(parts[0]), character: parts[1] });
+                        } else {
+                            cast.push({ name: toProperCase(parts[1]), character: parts[0] });
+                        }
+                    }
+                }
+                else if (entry.trim()) {
                     cast.push({ name: toProperCase(entry.trim()), character: '' });
                 }
             });
@@ -3075,6 +3430,63 @@
                 'Producteurs Exécutifs': 'Executive Producer'
             };
             
+            // Production company indicators to filter out
+            const productionIndicators = [
+                'Productions', 'Production', 'Films', 'Studio', 'Entertainment', 
+                'Pictures', 'Cinéma', 'Cinema', 'RTBF', 'TV', 'Télévision',
+                'Art', 'Media', 'VOO', 'Be Tv', 'France 2', 'France 3', 'TF1',
+                'Canal', 'M6', 'Arte', 'Pan Cinéma', 'Pan '
+            ];
+            
+            function isProductionCompany(name) {
+                const lower = name.toLowerCase();
+                return productionIndicators.some(ind => lower.includes(ind.toLowerCase()));
+            }
+            
+            // Helper to check if a word is ALL CAPS
+            function isWordAllCaps(word) {
+                const letters = word.replace(/[^a-zA-ZÀ-ÿ]/g, '');
+                return letters.length > 1 && letters === letters.toUpperCase();
+            }
+            
+            // Helper to check if a word starts with uppercase but isn't all caps (typical first name)
+            function isFirstNamePattern(word) {
+                const letters = word.replace(/[^a-zA-ZÀ-ÿ]/g, '');
+                if (letters.length < 2) return false;
+                return /^[A-ZÀ-Ü]/.test(letters) && letters !== letters.toUpperCase();
+            }
+            
+            // Split concatenated names like "Raphaële MOUSSAFIR Stéphane KAZANDJAN"
+            function splitConcatenatedNames(text) {
+                const words = text.trim().split(/\s+/);
+                if (words.length < 4) return [text]; // Need at least 4 words for 2 names
+                
+                const names = [];
+                let currentName = [];
+                
+                for (let i = 0; i < words.length; i++) {
+                    const word = words[i];
+                    currentName.push(word);
+                    
+                    // Check if this is an ALL CAPS word followed by a first-name pattern
+                    // That indicates a boundary between two names
+                    if (i < words.length - 1 && isWordAllCaps(word) && isFirstNamePattern(words[i + 1])) {
+                        // End current name, start new one
+                        if (currentName.length >= 2) {
+                            names.push(currentName.join(' '));
+                            currentName = [];
+                        }
+                    }
+                }
+                
+                // Add remaining name
+                if (currentName.length > 0) {
+                    names.push(currentName.join(' '));
+                }
+                
+                return names.length > 0 ? names : [text];
+            }
+            
             crewData.forEach(crewEntry => {
                 if (!crewEntry.names) return;
                 
@@ -3082,15 +3494,28 @@
                 const lines = crewEntry.names.split(/[\r\n]+/).filter(line => line.trim() !== '');
                 
                 lines.forEach(line => {
-                    // Split by ET/AND/&
-                    const names = line.split(/\s+(?:ET|AND|&)\s+/i);
+                    // Split by comma, double spaces, ET/AND/&
+                    // Order matters: first comma, then double space, then ET/AND/&
+                    let names = line.split(/,/).flatMap(part => 
+                        part.split(/\s{2,}/).flatMap(subpart =>
+                            subpart.split(/\s+(?:ET|AND|&)\s+/i)
+                        )
+                    );
+                    
+                    // Further split concatenated names like "FirstName LASTNAME FirstName LASTNAME"
+                    names = names.flatMap(name => splitConcatenatedNames(name));
+                    
                     names.forEach(name => {
                         name = name.trim();
-                        if (name && !isAllCaps(name)) {
-                            crew.push({ name: toProperCase(name), role: englishRole });
-                        } else if (name && isAllCaps(name)) {
-                            crew.push({ name: toProperCase(name), role: englishRole });
-                        }
+                        if (!name) return;
+                        
+                        // Skip production companies
+                        if (isProductionCompany(name)) return;
+                        
+                        // Skip if all caps (likely a company name)
+                        if (isAllCaps(name) && name.length > 3) return;
+                        
+                        crew.push({ name: toProperCase(name), role: englishRole });
                     });
                 });
             });
@@ -3123,8 +3548,21 @@
             if (!name1 || !name2) return false;
             const normalized1 = normalizeName(name1);
             const normalized2 = normalizeName(name2);
-            // If normalized versions match but original don't, there's an accent difference
-            return normalized1 === normalized2 && name1.toLowerCase() !== name2.toLowerCase();
+            const lower1 = name1.toLowerCase().trim();
+            const lower2 = name2.toLowerCase().trim();
+            
+            // If lowercase versions are different, there's a difference worth fixing
+            // This catches both accent differences AND minor spelling differences
+            // e.g., "Salignac" vs "Sélignac" or "Stephane" vs "Stéphane"
+            if (lower1 !== lower2) {
+                // Check if the difference is minor enough (high similarity)
+                const similarity = stringSimilarity(normalized1, normalized2);
+                if (similarity >= 0.85) {
+                    return true; // Flag as needing fix
+                }
+            }
+            
+            return false;
         }
 
         // Search for a person by name and check if they're in the movie credits via aliases
@@ -3224,6 +3662,25 @@
             }
             
             return (longer.length - costs[s2.length]) / longer.length;
+        }
+
+        // Normalize synopsis - remove extra line breaks and empty lines
+        function normalizeSynopsis(synopsis) {
+            if (!synopsis) return '';
+            
+            return synopsis
+                // Replace Windows line endings with Unix
+                .replace(/\r\n/g, '\n')
+                // Replace carriage returns
+                .replace(/\r/g, '\n')
+                // Replace multiple consecutive newlines (with optional spaces) with a single space
+                .replace(/\n\s*\n/g, ' ')
+                // Replace single newlines with space
+                .replace(/\n/g, ' ')
+                // Collapse multiple spaces into one
+                .replace(/\s{2,}/g, ' ')
+                // Trim
+                .trim();
         }
 
         function cleanCopyright(copyrightValue) {
@@ -3388,12 +3845,41 @@
                     let actor = '', character = '';
                     
                     // Check for format with dots or ellipsis
-                    // Matches: "...", "..", "…", "…..", etc. (2+ dots OR 1+ ellipsis)
-                    const dotsMatch = entry.match(/^(.+?)\s*(?:\.{2,}|[\u2026]+)\s*(.+)$/);
+                    // Matches: "...", "..", "…", "…..", " … ", "…." etc.
+                    // Pattern: 2+ regular dots OR 1+ ellipsis character (with optional spaces)
+                    const dotsMatch = entry.match(/^(.+?)\s*(?:\.{2,}|…+|\.+…|…\.+)\s*(.+)$/);
                     if (dotsMatch) {
                         actor = toProperCase(dotsMatch[1].trim());
-                        character = dotsMatch[2].trim();
+                        // Clean leading dots/periods from character name
+                        character = dotsMatch[2].replace(/^[\.…\s]+/, '').trim();
                         castMembers.push({ actor, character });
+                    }
+                    // Check for format: "Name / Character" with slash separator
+                    else if (entry.includes(' / ')) {
+                        const parts = entry.split(' / ').map(s => s.trim());
+                        if (parts.length >= 2) {
+                            actor = toProperCase(parts[0]);
+                            character = parts[1];
+                            castMembers.push({ actor, character });
+                        }
+                    }
+                    // Check for format: "Name - Character" with dash separator
+                    else if (entry.includes(' - ')) {
+                        const parts = entry.split(' - ').map(s => s.trim());
+                        if (parts.length >= 2) {
+                            actor = toProperCase(parts[0]);
+                            character = parts[1];
+                            castMembers.push({ actor, character });
+                        }
+                    }
+                    // Check for format: "Name = Character" with equals separator
+                    else if (entry.includes(' = ')) {
+                        const parts = entry.split(' = ').map(s => s.trim());
+                        if (parts.length >= 2) {
+                            actor = toProperCase(parts[0]);
+                            character = parts[1];
+                            castMembers.push({ actor, character });
+                        }
                     }
                     // Check for format: "Name (Role)" with parentheses
                     else if (entry.includes('(') && entry.includes(')')) {
@@ -3404,12 +3890,41 @@
                             castMembers.push({ actor, character });
                         }
                     } 
-                    // Check for format: "Name : Role" with colon
-                    else if (entry.includes(':')) {
-                        const parts = entry.split(':').map(s => s.trim());
+                    // Check for format with colon: could be "Actor : Character" or "Character : Actor"
+                    else if (entry.includes(' : ') || entry.includes(': ')) {
+                        const parts = entry.split(/\s*:\s*/).map(s => s.trim());
                         if (parts.length >= 2) {
-                            actor = toProperCase(parts[0]);
-                            character = parts[1];
+                            // Heuristic to detect order
+                            const firstWords = parts[0].split(/\s+/);
+                            const secondWords = parts[1].split(/\s+/);
+                            
+                            const articles = ['le', 'la', 'les', 'l\'', 'un', 'une', 'the', 'a', 'an'];
+                            const firstStartsWithArticle = articles.includes(firstWords[0].toLowerCase());
+                            const secondStartsWithArticle = articles.includes(secondWords[0].toLowerCase());
+                            
+                            const isNameWord = (w) => w.length >= 2 && /^[A-ZÀ-Ü]/.test(w) && !articles.includes(w.toLowerCase());
+                            const firstNameWords = firstWords.filter(isNameWord).length;
+                            const secondNameWords = secondWords.filter(isNameWord).length;
+                            
+                            let isActorFirst = true;
+                            
+                            if (firstStartsWithArticle && !secondStartsWithArticle) {
+                                isActorFirst = false;
+                            } else if (secondStartsWithArticle && !firstStartsWithArticle) {
+                                isActorFirst = true;
+                            } else if (firstNameWords >= 2 && secondNameWords <= 1) {
+                                isActorFirst = true;
+                            } else if (secondNameWords >= 2 && firstNameWords <= 1) {
+                                isActorFirst = false;
+                            }
+                            
+                            if (isActorFirst) {
+                                actor = toProperCase(parts[0]);
+                                character = parts[1];
+                            } else {
+                                actor = toProperCase(parts[1]);
+                                character = parts[0];
+                            }
                             castMembers.push({ actor, character });
                         }
                     }
@@ -3467,7 +3982,58 @@
             if (!crewData || crewData.length === 0) return '';
             
             // List of production company indicators
-            const productionIndicators = ['Productions', 'Production', 'Films', 'Studio', 'Entertainment', 'Pictures', 'PRODUCTIONS'];
+            const productionIndicators = [
+                'Productions', 'Production', 'Films', 'Studio', 'Entertainment', 
+                'Pictures', 'PRODUCTIONS', 'Cinéma', 'Cinema', 'RTBF', 'TV', 'Télévision',
+                'Art', 'Media', 'VOO', 'Be Tv', 'France 2', 'France 3', 'TF1',
+                'Canal', 'M6', 'Arte', 'Pan Cinéma', 'Pan '
+            ];
+            
+            function isProductionCompany(name) {
+                const lower = name.toLowerCase();
+                return productionIndicators.some(ind => lower.includes(ind.toLowerCase()));
+            }
+            
+            // Helper to check if a word is ALL CAPS
+            function isWordAllCaps(word) {
+                const letters = word.replace(/[^a-zA-ZÀ-ÿ]/g, '');
+                return letters.length > 1 && letters === letters.toUpperCase();
+            }
+            
+            // Helper to check if a word starts with uppercase but isn't all caps (typical first name)
+            function isFirstNamePattern(word) {
+                const letters = word.replace(/[^a-zA-ZÀ-ÿ]/g, '');
+                if (letters.length < 2) return false;
+                return /^[A-ZÀ-Ü]/.test(letters) && letters !== letters.toUpperCase();
+            }
+            
+            // Split concatenated names like "Raphaële MOUSSAFIR Stéphane KAZANDJAN"
+            function splitConcatenatedNames(text) {
+                const words = text.trim().split(/\s+/);
+                if (words.length < 4) return [text]; // Need at least 4 words for 2 names
+                
+                const names = [];
+                let currentName = [];
+                
+                for (let i = 0; i < words.length; i++) {
+                    const word = words[i];
+                    currentName.push(word);
+                    
+                    // Check if this is an ALL CAPS word followed by a first-name pattern
+                    if (i < words.length - 1 && isWordAllCaps(word) && isFirstNamePattern(words[i + 1])) {
+                        if (currentName.length >= 2) {
+                            names.push(currentName.join(' '));
+                            currentName = [];
+                        }
+                    }
+                }
+                
+                if (currentName.length > 0) {
+                    names.push(currentName.join(' '));
+                }
+                
+                return names.length > 0 ? names : [text];
+            }
             
             // Aggregate crew members by name
             const crewByName = {};
@@ -3486,83 +4052,36 @@
                     line = line.trim();
                     if (!line) return;
                     
-                    // Parse names more carefully
-                    // Look for production company patterns to remove them
-                    let cleanedLine = line;
-                    productionIndicators.forEach(indicator => {
-                        // Remove company names that contain these indicators
-                        const companyPattern = new RegExp(`\\b[A-ZÀ-Ü][\\w\\s]*${indicator}\\b`, 'gi');
-                        cleanedLine = cleanedLine.replace(companyPattern, '').trim();
-                    });
+                    // Split by comma, double spaces, and ET/AND/&
+                    let names = line.split(/,/).flatMap(part => 
+                        part.split(/\s{2,}/).flatMap(subpart =>
+                            subpart.split(/\s+(?:ET|AND|&)\s+/i)
+                        )
+                    );
                     
-                    // Now parse the remaining names
-                    // First, split on separators like "ET" (French) or "AND" (English)
-                    // These are common ways to list multiple people
-                    const nameParts = cleanedLine.split(/\s+(?:ET|AND|&)\s+/i).map(s => s.trim()).filter(Boolean);
+                    // Further split concatenated names like "FirstName LASTNAME FirstName LASTNAME"
+                    names = names.flatMap(name => splitConcatenatedNames(name));
                     
-                    // Process each part (which may still contain multiple names)
-                    nameParts.forEach(part => {
-                        const nameWords = part.split(/\s+/);
-                        const extractedNames = [];
+                    // Process each name
+                    names.forEach(name => {
+                        name = name.trim();
+                        if (!name) return;
                         
-                        // If there's a comma, split by comma
-                        if (part.includes(',')) {
-                            const commaSplit = part.split(',').map(s => s.trim()).filter(Boolean);
-                            extractedNames.push(...commaSplit);
-                        }
-                        // Check for pattern like "Raphaële Moussafir Stéphane Kazandjan"
-                        // We need to identify where one name ends and another begins
-                        else if (nameWords.length >= 4) {
-                            // Try to find name boundaries by looking for typical first name/last name patterns
-                            // This is heuristic-based
-                            let currentName = [];
-                            
-                            for (let i = 0; i < nameWords.length; i++) {
-                                const word = nameWords[i];
-                                currentName.push(word);
-                                
-                                // Check if the next word looks like it starts a new name
-                                // (starts with capital and current name already has 2 words)
-                                if (i < nameWords.length - 1) {
-                                    const nextWord = nameWords[i + 1];
-                                    const isNextCapitalized = /^[A-ZÀ-Ü]/.test(nextWord);
-                                    
-                                    // If we have at least 2 words and the next is capitalized,
-                                    // it might be a new name
-                                    if (currentName.length >= 2 && isNextCapitalized) {
-                                        // Check if this looks complete
-                                        // Common pattern: FirstName LastName
-                                        extractedNames.push(currentName.join(' '));
-                                        currentName = [];
-                                    }
-                                }
-                            }
-                            
-                            // Add any remaining words as the last name
-                            if (currentName.length > 0) {
-                                extractedNames.push(currentName.join(' '));
-                            }
-                        }
-                        // Otherwise treat as single name
-                        else {
-                            extractedNames.push(part);
-                        }
+                        // Skip production companies
+                        if (isProductionCompany(name)) return;
                         
-                        // Process each extracted name
-                        extractedNames.forEach(name => {
-                            name = name.trim();
-                            if (!name) return;  // Only skip empty names, not ALL CAPS (crew names are often in ALL CAPS)
-                            
-                            // Apply proper case to names (this handles ALL CAPS conversion)
-                            const properName = toProperCase(name);
-                            
-                            if (!crewByName[properName]) {
-                                crewByName[properName] = [];
-                            }
-                            if (!crewByName[properName].includes(itunesRole)) {
-                                crewByName[properName].push(itunesRole);
-                            }
-                        });
+                        // Skip if all caps and long (likely a company name)
+                        if (isAllCaps(name) && name.length > 20) return;
+                        
+                        // Apply proper case to names
+                        const properName = toProperCase(name);
+                        
+                        if (!crewByName[properName]) {
+                            crewByName[properName] = [];
+                        }
+                        if (!crewByName[properName].includes(itunesRole)) {
+                            crewByName[properName].push(itunesRole);
+                        }
                     });
                 });
             });
@@ -3669,6 +4188,59 @@
             }
         }
 
+        // Translate common English character descriptors to French
+        function translateCharacterToFrench(character) {
+            if (!character) return character;
+            
+            const translations = {
+                // Age descriptors
+                'young': 'jeune',
+                'adult': 'adulte',
+                'old': 'vieux',
+                'older': 'plus âgé',
+                'younger': 'plus jeune',
+                'child': 'enfant',
+                'baby': 'bébé',
+                'teenager': 'adolescent',
+                'teen': 'ado',
+                
+                // Family relations
+                'father': 'père',
+                'mother': 'mère',
+                'aunt': 'tante',
+                'uncle': 'oncle',
+                'grandfather': 'grand-père',
+                'grandmother': 'grand-mère',
+                'brother': 'frère',
+                'sister': 'sœur',
+                'son': 'fils',
+                'daughter': 'fille',
+                'husband': 'mari',
+                'wife': 'femme',
+                'cousin': 'cousin',
+                
+                // Common descriptors
+                'voice': 'voix',
+                'the': 'le'
+            };
+            
+            let result = character;
+            
+            // Replace whole words only (case-insensitive)
+            Object.entries(translations).forEach(([english, french]) => {
+                const regex = new RegExp(`\\b${english}\\b`, 'gi');
+                result = result.replace(regex, (match) => {
+                    // Preserve capitalization
+                    if (match[0] === match[0].toUpperCase()) {
+                        return french.charAt(0).toUpperCase() + french.slice(1);
+                    }
+                    return french;
+                });
+            });
+            
+            return result;
+        }
+
         // Fix role/character name in XML
         function fixRole(type, personName, oldRole, newRole, button) {
             if (!generatedXML) {
@@ -3680,9 +4252,11 @@
             const escapedOldRole = oldRole.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             
             if (type === 'cast') {
-                // For cast, replace character_name within the cast_member block containing this person
+                // For cast, translate character name to French and replace in XML
+                const translatedRole = translateCharacterToFrench(newRole);
+                
                 // Also update the reference_id to match the new character name
-                const newReferenceId = sanitizeReferenceId(newRole);
+                const newReferenceId = sanitizeReferenceId(translatedRole);
                 const oldReferenceId = sanitizeReferenceId(oldRole);
                 const escapedOldRefId = oldReferenceId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                 
@@ -3698,7 +4272,10 @@
                     `(<cast_member>[\\s\\S]*?<display_name>${escapedPersonName}</display_name>[\\s\\S]*?<character_name>)${escapedOldRole}(</character_name>[\\s\\S]*?</cast_member>)`,
                     'gi'
                 );
-                generatedXML = generatedXML.replace(charNameRegex, `$1${newRole}$2`);
+                generatedXML = generatedXML.replace(charNameRegex, `$1${translatedRole}$2`);
+                
+                // Update newRole for UI display
+                newRole = translatedRole;
             } else {
                 // For crew, map TMDB role to iTunes-compatible role
                 const itunesRole = mapToItunesRole(newRole) || newRole;
@@ -3864,6 +4441,9 @@
                 return;
             }
             
+            // Translate character name to French
+            const translatedCharacter = translateCharacterToFrench(character);
+            
             // Determine schema version from XML
             const is52 = generatedXML.includes('version="film5.2"');
             
@@ -3873,17 +4453,17 @@
                 castMemberXml = `
       <cast_member>
         <display_name>${name}</display_name>
-        <character_name>${character}</character_name>
+        <character_name>${translatedCharacter}</character_name>
       </cast_member>`;
             } else {
-                const referenceId = sanitizeReferenceId(character);
+                const referenceId = sanitizeReferenceId(translatedCharacter);
                 castMemberXml = `
       <cast_member>
         <display_name>${name}</display_name>
         <characters>
           <character>
             <reference_id>${referenceId}</reference_id>
-            <character_name>${character}</character_name>
+            <character_name>${translatedCharacter}</character_name>
           </character>
         </characters>
       </cast_member>`;
@@ -3930,6 +4510,12 @@
             if (!str) return '';
             return str
                 .toUpperCase()
+                // Handle ligatures that NFD doesn't decompose
+                .replace(/Œ/g, 'OE')
+                .replace(/œ/gi, 'OE')
+                .replace(/Æ/g, 'AE')
+                .replace(/æ/gi, 'AE')
+                .replace(/ß/g, 'SS')
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '') // Remove accent marks
                 .replace(/[^A-Z0-9\s]/g, '')     // Remove non-alphanumeric except spaces
@@ -4010,6 +4596,54 @@
                 return getValue(parseInt(index));
             };
             
+            // Special function to get cast data with roles from adjacent column or separate rows
+            const getCastWithRoles = () => {
+                // First check if we have cast collected from separate rows (P/Q pattern)
+                if (movie.castFromRows && movie.castFromRows.length > 0) {
+                    return movie.castFromRows.map(c => 
+                        c.character ? `${c.actor} (${c.character})` : c.actor
+                    ).join('\n');
+                }
+                
+                const castIndex = Object.keys(currentMappings).find(key => currentMappings[key] === 'cast');
+                if (!castIndex) return '';
+                
+                const castColIndex = parseInt(castIndex);
+                const castValue = getValue(castColIndex);
+                
+                if (!castValue) return '';
+                
+                // Check if adjacent column (castColIndex + 1) has role data
+                const roleColValue = getValue(castColIndex + 1);
+                
+                // If role column has "Rôle : " pattern, combine actor + role
+                if (roleColValue && roleColValue.includes('Rôle')) {
+                    // Split both columns by newlines
+                    const actors = castValue.split(/[\r\n]+/).filter(Boolean);
+                    const roles = roleColValue.split(/[\r\n]+/).filter(Boolean);
+                    
+                    // Combine actor and role for each entry
+                    const combined = [];
+                    for (let i = 0; i < actors.length; i++) {
+                        const actor = actors[i].trim();
+                        let role = roles[i] ? roles[i].trim() : '';
+                        
+                        // Remove "Rôle : " prefix if present
+                        role = role.replace(/^Rôle\s*:\s*/i, '');
+                        
+                        if (actor && role) {
+                            // Use parentheses format: "Actor (Character)"
+                            combined.push(`${actor} (${role})`);
+                        } else if (actor) {
+                            combined.push(actor);
+                        }
+                    }
+                    return combined.join('\n');
+                }
+                
+                return castValue;
+            };
+            
             // Get title and apply proper case if all caps
             let title = getMappedValue('title');
             if (title && isAllCaps(title)) {
@@ -4058,7 +4692,7 @@
     <original_spoken_locale>${originalSpokenLocale}</original_spoken_locale>
     <title>${title}</title>
     <studio_release_title>${studioTitle}</studio_release_title>
-    <synopsis>${getMappedValue('synopsis')}</synopsis>${productionCompany ? `
+    <synopsis>${normalizeSynopsis(getMappedValue('synopsis'))}</synopsis>${productionCompany ? `
     <production_company>${productionCompany}</production_company>` : ''}
     <copyright_cline>${cleanCopyright(getMappedValue('copyright'))}</copyright_cline>
     <theatrical_release_date>${formatDate(getMappedValue('theatrical_release'))}</theatrical_release_date>
@@ -4073,7 +4707,7 @@
         <theatrical_release_date>${formatDate(getMappedValue('theatrical_release'))}</theatrical_release_date>
       </region>
     </regions>
-    <cast>${parseCast(getMappedValue('cast'), true)}
+    <cast>${parseCast(getCastWithRoles(), true)}
     </cast>
     <crew>${crewXML}
     </crew>
@@ -4117,7 +4751,7 @@
     <original_spoken_locale>${originalSpokenLocale}</original_spoken_locale>
     <title>${title}</title>
     <studio_release_title>${studioTitle}</studio_release_title>
-    <synopsis>${getMappedValue('synopsis')}</synopsis>${productionCompany ? `
+    <synopsis>${normalizeSynopsis(getMappedValue('synopsis'))}</synopsis>${productionCompany ? `
     <production_company>${productionCompany}</production_company>` : ''}
     <copyright_cline>${cleanCopyright(getMappedValue('copyright'))}</copyright_cline>
     <theatrical_release_date>${formatDate(getMappedValue('theatrical_release'))}</theatrical_release_date>
@@ -4132,7 +4766,7 @@
         <theatrical_release_date>${formatDate(getMappedValue('theatrical_release'))}</theatrical_release_date>
       </region>
     </regions>
-    <cast>${parseCast(getMappedValue('cast'), false)}
+    <cast>${parseCast(getCastWithRoles(), false)}
     </cast>
     <crew>${crewXML}
     </crew>
