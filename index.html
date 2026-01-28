@@ -1558,7 +1558,19 @@
         let currentBackdropPath = ''; // Store current movie backdrop
 
         // TMDB API configuration
-        const TMDB_API_KEY = '42dfe036a7664826cb47fc7a122825f3';
+        // TMDB API proxy function - calls Netlify serverless function
+        // API key is stored securely in Netlify environment variables
+        async function tmdbFetch(endpoint, params = '') {
+            const response = await fetch('/.netlify/functions/tmdb', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ endpoint, params })
+            });
+            if (!response.ok) {
+                throw new Error(`TMDB API error: ${response.status}`);
+            }
+            return response.json();
+        }
         const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
         const TMDB_BACKDROP_BASE = 'https://image.tmdb.org/t/p/w1280';
 
@@ -1591,15 +1603,14 @@
                 // Clean the title for search
                 let searchTitle = movieTitle.trim();
                 
-                // Build search URL
-                let searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchTitle)}&language=fr-FR`;
+                // Build search params
+                let searchParams = `query=${encodeURIComponent(searchTitle)}&language=fr-FR`;
                 
                 if (releaseYear) {
-                    searchUrl += `&year=${releaseYear}`;
+                    searchParams += `&year=${releaseYear}`;
                 }
                 
-                const response = await fetch(searchUrl);
-                const data = await response.json();
+                const data = await tmdbFetch('search/movie', searchParams);
                 
                 if (data.results && data.results.length > 0) {
                     // Find best match (first result or match by year)
@@ -1637,9 +1648,7 @@
                     }
                 } else {
                     // Try English search as fallback
-                    const fallbackUrl = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchTitle)}&language=en-US`;
-                    const fallbackResponse = await fetch(fallbackUrl);
-                    const fallbackData = await fallbackResponse.json();
+                    const fallbackData = await tmdbFetch('search/movie', `query=${encodeURIComponent(searchTitle)}&language=en-US`);
                     
                     if (fallbackData.results && fallbackData.results.length > 0 && fallbackData.results[0].poster_path) {
                         const movie = fallbackData.results[0];
@@ -2255,6 +2264,18 @@
             });
         }
 
+        // Function to convert French titles (only first letter uppercase)
+        // "LA BONNE ÉTOILE" → "La bonne étoile"
+        function toFrenchTitleCase(str) {
+            if (!str) return '';
+            
+            // Convert entire string to lowercase first (handles accented chars)
+            let lower = str.toLowerCase();
+            
+            // Capitalize only the first letter
+            return lower.charAt(0).toUpperCase() + lower.slice(1);
+        }
+
         // Function to convert text to proper name case (handles names better)
         function toProperCase(str) {
             if (!str) return '';
@@ -2652,19 +2673,16 @@
                 }
                 
                 // Search for the movie on TMDB
-                let searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(movie.title)}&language=fr-FR`;
+                let searchParams = `query=${encodeURIComponent(movie.title)}&language=fr-FR`;
                 if (releaseYear) {
-                    searchUrl += `&year=${releaseYear}`;
+                    searchParams += `&year=${releaseYear}`;
                 }
                 
-                const searchResponse = await fetch(searchUrl);
-                const searchData = await searchResponse.json();
+                let searchData = await tmdbFetch('search/movie', searchParams);
                 
                 if (!searchData.results || searchData.results.length === 0) {
                     // Try English search
-                    const fallbackUrl = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(movie.title)}&language=en-US`;
-                    const fallbackResponse = await fetch(fallbackUrl);
-                    const fallbackData = await fallbackResponse.json();
+                    const fallbackData = await tmdbFetch('search/movie', `query=${encodeURIComponent(movie.title)}&language=en-US`);
                     
                     if (!fallbackData.results || fallbackData.results.length === 0) {
                         validationList.innerHTML = `
@@ -2688,9 +2706,7 @@
                 }
                 
                 // Fetch credits (cast and crew)
-                const creditsUrl = `https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${TMDB_API_KEY}&language=fr-FR`;
-                const creditsResponse = await fetch(creditsUrl);
-                const creditsData = await creditsResponse.json();
+                const creditsData = await tmdbFetch(`movie/${movieId}/credits`, 'language=fr-FR');
                 
                 // Extract TMDB cast and crew (including character/job info)
                 const tmdbCastFull = (creditsData.cast || []).map(c => ({
@@ -3323,9 +3339,32 @@
             if (!castValue) return [];
             
             const cast = [];
-            const entries = castValue.split(/[\r\n]+/).filter(Boolean);
+            
+            // First split by newlines, then by multiple spaces (3+) for entries on same line
+            const lines = castValue.split(/[\r\n]+/).filter(Boolean);
+            const entries = [];
+            lines.forEach(line => {
+                // Split by 3+ spaces to separate multiple entries on same line
+                const parts = line.split(/\s{3,}/).filter(Boolean);
+                entries.push(...parts);
+            });
             
             entries.forEach(entry => {
+                entry = entry.trim();
+                if (!entry) return;
+                
+                // Handle "Actor : Character (AltName)" format - double role pattern
+                // e.g., "Benoît POELVOORDE : Jean Chevalin (Jacob)"
+                const colonWithParenMatch = entry.match(/^(.+?)\s*:\s*(.+?)\s*\(([^)]+)\)\s*$/);
+                if (colonWithParenMatch) {
+                    const actor = toProperCase(colonWithParenMatch[1].trim());
+                    const character = colonWithParenMatch[2].trim();
+                    const altName = colonWithParenMatch[3].trim();
+                    // Combine as "Character /AltName"
+                    cast.push({ name: actor, character: `${character} /${altName}` });
+                    return;
+                }
+                
                 // Handle dots/ellipsis separator
                 // Matches: "...", "..", "…", " … ", "….." etc.
                 const dotsMatch = entry.match(/^(.+?)\s*(?:\.{2,}|…+|\.+…|…\.+)\s*(.+)$/);
@@ -3333,74 +3372,71 @@
                     // Clean leading dots/periods from character name
                     const character = dotsMatch[2].replace(/^[\.…\s]+/, '').trim();
                     cast.push({ name: toProperCase(dotsMatch[1].trim()), character: character });
-                } 
+                    return;
+                }
+                
                 // Handle slash separator: "Name / Character"
-                else if (entry.includes(' / ')) {
+                if (entry.includes(' / ')) {
                     const parts = entry.split(' / ').map(s => s.trim());
                     if (parts.length >= 2) {
                         cast.push({ name: toProperCase(parts[0]), character: parts[1] });
+                        return;
                     }
                 }
+                
                 // Handle dash separator: "Name - Character"
-                else if (entry.includes(' - ')) {
+                if (entry.includes(' - ')) {
                     const parts = entry.split(' - ').map(s => s.trim());
                     if (parts.length >= 2) {
                         cast.push({ name: toProperCase(parts[0]), character: parts[1] });
+                        return;
                     }
                 }
+                
                 // Handle equals separator: "Name = Character"
-                else if (entry.includes(' = ')) {
+                if (entry.includes(' = ')) {
                     const parts = entry.split(' = ').map(s => s.trim());
                     if (parts.length >= 2) {
                         cast.push({ name: toProperCase(parts[0]), character: parts[1] });
+                        return;
                     }
                 }
+                
                 // Handle parentheses: "Name (Character)"
-                else if (entry.includes('(') && entry.includes(')')) {
+                if (entry.includes('(') && entry.includes(')') && !entry.includes(':')) {
                     const match = entry.match(/(.+?)\s*\(([^)]+)\)/);
                     if (match) {
                         cast.push({ name: toProperCase(match[1].trim()), character: match[2].trim() });
+                        return;
                     }
                 }
-                // Handle colon separator: could be "Actor : Character" or "Character : Actor"
-                else if (entry.includes(' : ') || entry.includes(': ')) {
+                
+                // Handle colon separator: "Actor : Character"
+                if (entry.includes(' : ') || entry.includes(': ')) {
                     const parts = entry.split(/\s*:\s*/).map(s => s.trim());
                     if (parts.length >= 2) {
-                        // Heuristic to detect order:
-                        // - If first part looks like a full name (2+ words, both capitalized, no articles)
-                        //   and second part is simpler (1 word or starts with article), it's Actor : Character
-                        // - Otherwise, it's Character : Actor
-                        
+                        // Heuristic to detect order
                         const firstWords = parts[0].split(/\s+/);
                         const secondWords = parts[1].split(/\s+/);
                         
-                        // Check if starts with French/English article (indicates character/role name)
                         const articles = ['le', 'la', 'les', 'l\'', 'un', 'une', 'the', 'a', 'an'];
                         const firstStartsWithArticle = articles.includes(firstWords[0].toLowerCase());
                         const secondStartsWithArticle = articles.includes(secondWords[0].toLowerCase());
                         
-                        // Count "name-like" words (capitalized, 2+ chars, not articles)
                         const isNameWord = (w) => w.length >= 2 && /^[A-ZÀ-Ü]/.test(w) && !articles.includes(w.toLowerCase());
                         const firstNameWords = firstWords.filter(isNameWord).length;
                         const secondNameWords = secondWords.filter(isNameWord).length;
                         
-                        // Decision logic:
-                        // - If first starts with article → Character : Actor
-                        // - If second starts with article → Actor : Character
-                        // - If first has 2+ name words and second has 0-1 → Actor : Character
-                        // - If second has 2+ name words and first has 0-1 → Character : Actor
-                        // - Default: Actor : Character (most common format)
-                        
-                        let isActorFirst = true; // Default
+                        let isActorFirst = true;
                         
                         if (firstStartsWithArticle && !secondStartsWithArticle) {
-                            isActorFirst = false; // Character : Actor
+                            isActorFirst = false;
                         } else if (secondStartsWithArticle && !firstStartsWithArticle) {
-                            isActorFirst = true; // Actor : Character
+                            isActorFirst = true;
                         } else if (firstNameWords >= 2 && secondNameWords <= 1) {
-                            isActorFirst = true; // Actor : Character
+                            isActorFirst = true;
                         } else if (secondNameWords >= 2 && firstNameWords <= 1) {
-                            isActorFirst = false; // Character : Actor
+                            isActorFirst = false;
                         }
                         
                         if (isActorFirst) {
@@ -3408,9 +3444,12 @@
                         } else {
                             cast.push({ name: toProperCase(parts[1]), character: parts[0] });
                         }
+                        return;
                     }
                 }
-                else if (entry.trim()) {
+                
+                // No separator found, treat as just an actor name
+                if (entry.trim()) {
                     cast.push({ name: toProperCase(entry.trim()), character: '' });
                 }
             });
@@ -3569,9 +3608,7 @@
         async function searchPersonAlias(name, movieCreditIds) {
             try {
                 // Search for the person on TMDB
-                const searchUrl = `https://api.themoviedb.org/3/search/person?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(name)}`;
-                const response = await fetch(searchUrl);
-                const data = await response.json();
+                const data = await tmdbFetch('search/person', `query=${encodeURIComponent(name)}`);
                 
                 if (!data.results || data.results.length === 0) {
                     return { found: false };
@@ -3581,9 +3618,7 @@
                 for (const person of data.results.slice(0, 3)) { // Check top 3 results
                     if (movieCreditIds.includes(person.id)) {
                         // Found! Get the person's primary TMDB name
-                        const personUrl = `https://api.themoviedb.org/3/person/${person.id}?api_key=${TMDB_API_KEY}`;
-                        const personResponse = await fetch(personUrl);
-                        const personData = await personResponse.json();
+                        const personData = await tmdbFetch(`person/${person.id}`);
                         
                         return {
                             found: true,
@@ -3595,9 +3630,7 @@
                 
                 // Also check by fetching person details and comparing aliases
                 for (const person of data.results.slice(0, 3)) {
-                    const personUrl = `https://api.themoviedb.org/3/person/${person.id}?api_key=${TMDB_API_KEY}`;
-                    const personResponse = await fetch(personUrl);
-                    const personData = await personResponse.json();
+                    const personData = await tmdbFetch(`person/${person.id}`);
                     
                     // Check if person ID is in credits
                     if (movieCreditIds.includes(personData.id)) {
@@ -3668,6 +3701,8 @@
         function normalizeSynopsis(synopsis) {
             if (!synopsis) return '';
             
+            const NBSP = '\u00A0'; // Non-breaking space
+            
             return synopsis
                 // Replace Windows line endings with Unix
                 .replace(/\r\n/g, '\n')
@@ -3677,6 +3712,22 @@
                 .replace(/\n\s*\n/g, ' ')
                 // Replace single newlines with space
                 .replace(/\n/g, ' ')
+                // Replace … (ellipsis) with ...
+                .replace(/…/g, '...')
+                // Replace oe with œ ligature (common French words)
+                .replace(/\bcoeur\b/gi, m => m[0] === 'C' ? 'Cœur' : 'cœur')
+                .replace(/\bsoeur\b/gi, m => m[0] === 'S' ? 'Sœur' : 'sœur')
+                .replace(/\boeuvre\b/gi, m => m[0] === 'O' ? 'Œuvre' : 'œuvre')
+                .replace(/\boeuf\b/gi, m => m[0] === 'O' ? 'Œuf' : 'œuf')
+                .replace(/\boeil\b/gi, m => m[0] === 'O' ? 'Œil' : 'œil')
+                // French typography: non-breaking space after « and before »
+                .replace(/«\s*/g, '«' + NBSP)
+                .replace(/\s*»/g, NBSP + '»')
+                // French typography: non-breaking space before ! ? : ;
+                .replace(/\s+!/g, NBSP + '!')
+                .replace(/\s+\?/g, NBSP + '?')
+                .replace(/\s+:/g, NBSP + ':')
+                .replace(/\s+;/g, NBSP + ';')
                 // Collapse multiple spaces into one
                 .replace(/\s{2,}/g, ' ')
                 // Trim
@@ -3692,38 +3743,42 @@
             // Remove leading/trailing dashes
             cleaned = cleaned.replace(/^[-–]+|[-–]+$/g, '').trim();
             
-            // Split by slash, dash, or emdash to get parts
-            const parts = cleaned.split(/\s*[\/–-]\s*/);
+            // Extract year (4 digits)
+            const yearMatch = cleaned.match(/(\d{4})/);
+            const year = yearMatch ? yearMatch[1] : '';
             
-            // Process each part to apply proper case to production companies
-            const processedParts = parts.map(part => {
-                part = part.trim();
-                
-                // Check if the part starts with a year (4 digits)
-                if (/^\d{4}/.test(part)) {
-                    // Keep the year part, but process the rest if there's more
-                    const yearMatch = part.match(/^(\d{4})\s*(.*)$/);
-                    if (yearMatch) {
-                        const year = yearMatch[1];
-                        const rest = yearMatch[2];
-                        if (rest) {
-                            // Process the rest (company name)
-                            return year + ' ' + formatCompanyName(rest);
-                        }
-                        return year;
-                    }
-                }
-                
-                // It's a company name, format it
-                return formatCompanyName(part);
-            });
+            // Remove the year from the string to get production companies
+            let companiesPart = cleaned.replace(/\d{4}/, '').trim();
             
-            // Join with ' / ' (spaces around slashes)
-            return processedParts.join(' / ');
+            // Remove leading dashes/slashes after year removal
+            companiesPart = companiesPart.replace(/^[-–\/\s]+/, '').trim();
+            
+            // Split by slash, dash, or emdash to get individual companies
+            const companies = companiesPart.split(/\s*[\/–-]\s*/).filter(c => c.trim());
+            
+            // Format all production companies
+            const formattedCompanies = companies.map(c => formatCompanyName(c.trim())).filter(Boolean);
+            
+            // Return "year Company1 / Company2 / Company3" format
+            if (year && formattedCompanies.length > 0) {
+                return `${year} ${formattedCompanies.join(' / ')}`;
+            } else if (year) {
+                return year;
+            } else if (formattedCompanies.length > 0) {
+                return formattedCompanies.join(' / ');
+            }
+            
+            return '';
         }
         
         function formatCompanyName(name) {
             if (!name) return '';
+            
+            // Remove content in parentheses (e.g., "(YZE)" abbreviations)
+            name = name.replace(/\s*\([^)]*\)/g, '').trim();
+            
+            // Remove any stray closing parentheses
+            name = name.replace(/\)+/g, '').trim();
             
             // List of words that should stay lowercase (unless at the beginning)
             const lowercaseWords = ['de', 'du', 'et', 'la', 'le', 'les'];
@@ -3760,43 +3815,136 @@
         function parseGenres(genreValue) {
             if (!genreValue) return '';
             
-            // Split genres by line breaks, commas, slashes, "and", or "&"
-            const genreList = genreValue.split(/[\r\n,\/]+|and|&/).map(g => g.trim()).filter(Boolean);
-            let genresXML = '';
+            // iTunes genre code to display name mapping
+            const ITUNES_GENRES = {
+                'ACTION-ADVENTURE-00': 'Action & Adventure',
+                'AFRICAN-00': 'African',
+                'ANIME-00': 'Anime',
+                'BOLLYWOOD-00': 'Bollywood',
+                'CLASSICS-00': 'Classics',
+                'COMEDY-00': 'Comedy',
+                'CONCERT-FILMS-00': 'Concert Films',
+                'DOCUMENTARY-00': 'Documentary',
+                'DRAMA-00': 'Drama',
+                'FOREIGN-00': 'Foreign',
+                'HOLIDAY-00': 'Holiday',
+                'HORROR-00': 'Horror',
+                'INDEPENDENT-00': 'Independent',
+                'KIDS-FAMILY-00': 'Kids & Family',
+                'MADE-FOR-TV-00': 'Made for TV',
+                'MIDDLE-EASTERN-00': 'Middle Eastern',
+                'MUSIC-DOCUMENTARIES-00': 'Music Documentary',
+                'MUSIC-FEATURE-FILMS-00': 'Music Feature Film',
+                'MUSICALS-00': 'Musicals',
+                'REGIONAL-INDIAN-00': 'Regional Indian',
+                'ROMANCE-00': 'Romance',
+                'RUSSIAN-00': 'Russian',
+                'SCIFI-FANTASY-00': 'Sci-Fi & Fantasy',
+                'SHORT-FILMS-00': 'Short Films',
+                'SPECIAL-INTEREST-00': 'Special Interest',
+                'SPORTS-00': 'Sports',
+                'THRILLER-00': 'Thriller',
+                'TURKISH-00': 'Turkish',
+                'URBAN-00': 'Urban',
+                'WESTERN-00': 'Western'
+            };
             
-            genreList.forEach(genre => {
-                if (genre) {
-                    // Try to find the genre code
-                    let genreCode = GENRE_CODES[genre];
-                    
-                    // If not found, try with normalized genre name
-                    if (!genreCode) {
-                        const normalizedGenre = genre.charAt(0).toUpperCase() + genre.slice(1).toLowerCase();
-                        genreCode = GENRE_CODES[normalizedGenre];
-                    }
-                    
-                    // Default to the specific genre codes if no match
-                    if (!genreCode) {
-                        // Check for specific common cases
-                        if (genre.toLowerCase() === 'drame' || genre.toLowerCase() === 'drama') {
-                            genreCode = 'DRAMA-00';
-                            genre = 'Drama';
-                        } else if (genre.toLowerCase() === 'thriller') {
-                            genreCode = 'THRILLER-00';
-                            genre = 'Thriller';
-                        } else if (genre.toLowerCase() === 'comédie' || genre.toLowerCase() === 'comedy') {
-                            genreCode = 'COMEDY-00';
-                            genre = 'Comedy';
-                        } else {
-                            // Use the genre as-is if no mapping found
-                            genreCode = genre.toUpperCase().replace(/[^A-Z]/g, '') + '-00';
-                        }
-                    }
-                    
-                    genresXML += `
-      <genre code="${genreCode}">${genre}</genre>`;
+            // Mapping from French/common genre names to iTunes codes
+            const GENRE_MAPPING = {
+                'comédie': 'COMEDY-00',
+                'comedie': 'COMEDY-00',
+                'comedy': 'COMEDY-00',
+                'drame': 'DRAMA-00',
+                'drama': 'DRAMA-00',
+                'action': 'ACTION-ADVENTURE-00',
+                'aventure': 'ACTION-ADVENTURE-00',
+                'adventure': 'ACTION-ADVENTURE-00',
+                'thriller': 'THRILLER-00',
+                'horreur': 'HORROR-00',
+                'horror': 'HORROR-00',
+                'romance': 'ROMANCE-00',
+                'romantique': 'ROMANCE-00',
+                'animation': 'KIDS-FAMILY-00',
+                'animé': 'ANIME-00',
+                'anime': 'ANIME-00',
+                'documentaire': 'DOCUMENTARY-00',
+                'documentary': 'DOCUMENTARY-00',
+                'famille': 'KIDS-FAMILY-00',
+                'family': 'KIDS-FAMILY-00',
+                'enfants': 'KIDS-FAMILY-00',
+                'kids': 'KIDS-FAMILY-00',
+                'science-fiction': 'SCIFI-FANTASY-00',
+                'sci-fi': 'SCIFI-FANTASY-00',
+                'fantastique': 'SCIFI-FANTASY-00',
+                'fantasy': 'SCIFI-FANTASY-00',
+                'musical': 'MUSICALS-00',
+                'musicals': 'MUSICALS-00',
+                'western': 'WESTERN-00',
+                'guerre': 'ACTION-ADVENTURE-00',
+                'war': 'ACTION-ADVENTURE-00',
+                'policier': 'THRILLER-00',
+                'crime': 'THRILLER-00',
+                'biopic': 'DRAMA-00',
+                'biographie': 'DRAMA-00',
+                'biography': 'DRAMA-00',
+                'historique': 'DRAMA-00',
+                'history': 'DRAMA-00',
+                'sport': 'SPORTS-00',
+                'sports': 'SPORTS-00',
+                'indépendant': 'INDEPENDENT-00',
+                'independent': 'INDEPENDENT-00',
+                'classique': 'CLASSICS-00',
+                'classics': 'CLASSICS-00',
+                'étranger': 'FOREIGN-00',
+                'foreign': 'FOREIGN-00',
+                'dramatique': 'DRAMA-00'
+            };
+            
+            const normalizedValue = genreValue.toLowerCase().trim();
+            
+            // Check for compound French genres
+            const compoundPatterns = [
+                { pattern: /com[ée]die\s+dramatique/i, genres: ['COMEDY-00', 'DRAMA-00'] },
+                { pattern: /drame\s+com[ée]die/i, genres: ['DRAMA-00', 'COMEDY-00'] },
+                { pattern: /action\s+aventure/i, genres: ['ACTION-ADVENTURE-00'] },
+                { pattern: /science[- ]fiction/i, genres: ['SCIFI-FANTASY-00'] },
+                { pattern: /com[ée]die\s+romantique/i, genres: ['COMEDY-00', 'ROMANCE-00'] },
+                { pattern: /thriller\s+dramatique/i, genres: ['THRILLER-00', 'DRAMA-00'] },
+                { pattern: /drame\s+historique/i, genres: ['DRAMA-00'] },
+                { pattern: /com[ée]die\s+musicale/i, genres: ['COMEDY-00', 'MUSICALS-00'] }
+            ];
+            
+            let genreCodes = [];
+            
+            // Check for compound patterns first
+            for (const cp of compoundPatterns) {
+                if (cp.pattern.test(normalizedValue)) {
+                    genreCodes = cp.genres;
+                    break;
                 }
-            });
+            }
+            
+            // If no compound pattern matched, split and map individually
+            if (genreCodes.length === 0) {
+                const genreList = genreValue.split(/[\r\n,\/]+|\s+et\s+|\s+and\s+|&/).map(g => g.trim().toLowerCase()).filter(Boolean);
+                
+                for (const genre of genreList) {
+                    const code = GENRE_MAPPING[genre];
+                    if (code && !genreCodes.includes(code)) {
+                        genreCodes.push(code);
+                    }
+                }
+            }
+            
+            // Build XML output: <genre code="COMEDY-00">Comedy</genre>
+            let genresXML = '';
+            for (const code of genreCodes) {
+                const displayName = ITUNES_GENRES[code];
+                if (displayName) {
+                    genresXML += `
+      <genre code="${code}">${displayName}</genre>`;
+                }
+            }
             
             return genresXML;
         }
@@ -3844,6 +3992,19 @@
                 entries.forEach(entry => {
                     let actor = '', character = '';
                     
+                    // Check for "Actor : Character (AltName)" format - double role pattern
+                    // e.g., "Benoît POELVOORDE : Jean Chevalin (Jacob)"
+                    const colonWithParenMatch = entry.match(/^(.+?)\s*:\s*(.+?)\s*\(([^)]+)\)\s*$/);
+                    if (colonWithParenMatch) {
+                        actor = toProperCase(colonWithParenMatch[1].trim());
+                        const charName = colonWithParenMatch[2].trim();
+                        const altName = colonWithParenMatch[3].trim();
+                        // Combine as "Character /AltName"
+                        character = `${charName} /${altName}`;
+                        castMembers.push({ actor, character });
+                        return;
+                    }
+                    
                     // Check for format with dots or ellipsis
                     // Matches: "...", "..", "…", "…..", " … ", "…." etc.
                     // Pattern: 2+ regular dots OR 1+ ellipsis character (with optional spaces)
@@ -3853,45 +4014,55 @@
                         // Clean leading dots/periods from character name
                         character = dotsMatch[2].replace(/^[\.…\s]+/, '').trim();
                         castMembers.push({ actor, character });
+                        return;
                     }
+                    
                     // Check for format: "Name / Character" with slash separator
-                    else if (entry.includes(' / ')) {
+                    if (entry.includes(' / ')) {
                         const parts = entry.split(' / ').map(s => s.trim());
                         if (parts.length >= 2) {
                             actor = toProperCase(parts[0]);
                             character = parts[1];
                             castMembers.push({ actor, character });
+                            return;
                         }
                     }
+                    
                     // Check for format: "Name - Character" with dash separator
-                    else if (entry.includes(' - ')) {
+                    if (entry.includes(' - ')) {
                         const parts = entry.split(' - ').map(s => s.trim());
                         if (parts.length >= 2) {
                             actor = toProperCase(parts[0]);
                             character = parts[1];
                             castMembers.push({ actor, character });
+                            return;
                         }
                     }
+                    
                     // Check for format: "Name = Character" with equals separator
-                    else if (entry.includes(' = ')) {
+                    if (entry.includes(' = ')) {
                         const parts = entry.split(' = ').map(s => s.trim());
                         if (parts.length >= 2) {
                             actor = toProperCase(parts[0]);
                             character = parts[1];
                             castMembers.push({ actor, character });
+                            return;
                         }
                     }
-                    // Check for format: "Name (Role)" with parentheses
-                    else if (entry.includes('(') && entry.includes(')')) {
+                    
+                    // Check for format: "Name (Role)" with parentheses (but not with colon)
+                    if (entry.includes('(') && entry.includes(')') && !entry.includes(':')) {
                         const match = entry.match(/(.+?)\s*\(([^)]+)\)/);
                         if (match) {
                             actor = toProperCase(match[1].trim());
                             character = match[2].trim();
                             castMembers.push({ actor, character });
+                            return;
                         }
-                    } 
+                    }
+                    
                     // Check for format with colon: could be "Actor : Character" or "Character : Actor"
-                    else if (entry.includes(' : ') || entry.includes(': ')) {
+                    if (entry.includes(' : ') || entry.includes(': ')) {
                         const parts = entry.split(/\s*:\s*/).map(s => s.trim());
                         if (parts.length >= 2) {
                             // Heuristic to detect order
@@ -3926,10 +4097,12 @@
                                 character = parts[0];
                             }
                             castMembers.push({ actor, character });
+                            return;
                         }
                     }
+                    
                     // If no separator found, treat it as just an actor name with no character
-                    else if (entry.trim()) {
+                    if (entry.trim()) {
                         actor = toProperCase(entry.trim());
                         character = ''; // Empty character name
                         castMembers.push({ actor, character });
@@ -4644,16 +4817,17 @@
                 return castValue;
             };
             
-            // Get title and apply proper case if all caps
+            // Get title and apply French title case (only first letter uppercase)
             let title = getMappedValue('title');
-            if (title && isAllCaps(title)) {
-                title = toTitleCase(title);
+            if (title) {
+                title = toFrenchTitleCase(title);
             }
             
-            // Get studio release title
-            let studioTitle = getMappedValue('studio_release_title') || title;
+            // Get studio release title (keep original case for this field)
+            let studioTitle = getMappedValue('studio_release_title') || getMappedValue('title');
+            // Studio release title can keep mixed case or be normalized
             if (studioTitle && isAllCaps(studioTitle)) {
-                studioTitle = toTitleCase(studioTitle);
+                studioTitle = toFrenchTitleCase(studioTitle);
             }
             
             // Get original spoken locale and convert to RFC5646 format
@@ -4674,6 +4848,13 @@
             
             // Get country value
             const country = getMappedValue('country');
+            
+            // Get physical release date, fallback to VOD start date if empty
+            let physicalRelease = getMappedValue('physical_release');
+            const vodStart = getMappedValue('vod_start');
+            if (!physicalRelease && vodStart) {
+                physicalRelease = vodStart;
+            }
             
             // Generate different XML based on schema version
             let xml = '';
@@ -4722,11 +4903,11 @@
         <sales_start_date>${formatDate(getMappedValue('sales_start'))}</sales_start_date>
         <sales_end_date>${formatDate(getMappedValue('sales_end'))}</sales_end_date>
         <cleared_for_vod>${getMappedValue('cleared_vod') || 'true'}</cleared_for_vod>
+        <cleared_for_hd_vod>${getMappedValue('cleared_hd_vod') || 'true'}</cleared_for_hd_vod>
         <vod_type>Tier 2</vod_type>
         <available_for_vod_date>${formatDate(getMappedValue('vod_start'))}</available_for_vod_date>
         <unavailable_for_vod_date>${formatDate(getMappedValue('vod_end'))}</unavailable_for_vod_date>
-        <cleared_for_hd_vod>${getMappedValue('cleared_hd_vod') || 'true'}</cleared_for_hd_vod>
-        <physical_release_date>${formatDate(getMappedValue('physical_release'))}</physical_release_date>
+        <physical_release_date>${formatDate(physicalRelease)}</physical_release_date>
       </product>
     </products>
   </video>
@@ -4781,11 +4962,11 @@
         <sales_start_date>${formatDate(getMappedValue('sales_start'))}</sales_start_date>
         <sales_end_date>${formatDate(getMappedValue('sales_end'))}</sales_end_date>
         <cleared_for_vod>${getMappedValue('cleared_vod') || 'true'}</cleared_for_vod>
+        <cleared_for_hd_vod>${getMappedValue('cleared_hd_vod') || 'true'}</cleared_for_hd_vod>
         <vod_type>Tier 2</vod_type>
         <available_for_vod_date>${formatDate(getMappedValue('vod_start'))}</available_for_vod_date>
         <unavailable_for_vod_date>${formatDate(getMappedValue('vod_end'))}</unavailable_for_vod_date>
-        <cleared_for_hd_vod>${getMappedValue('cleared_hd_vod') || 'true'}</cleared_for_hd_vod>
-        <physical_release_date>${formatDate(getMappedValue('physical_release'))}</physical_release_date>
+        <physical_release_date>${formatDate(physicalRelease)}</physical_release_date>
       </product>
     </products>
   </video>
