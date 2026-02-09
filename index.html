@@ -3112,7 +3112,72 @@
                         }
                     }
                     
+                    // Check for missing Director - suggest from TMDB
+                    const hasDirector = crewNames.some(item => {
+                        const role = item.roles ? item.roles.toLowerCase() : '';
+                        return role.includes('director') && !role.includes('co-director');
+                    });
+                    
+                    if (!hasDirector) {
+                        // Find Director(s) from TMDB crew
+                        const tmdbDirectors = tmdbCrewFull.filter(c => 
+                            c.job && c.job.toLowerCase() === 'director'
+                        );
+                        
+                        if (tmdbDirectors.length > 0) {
+                            html += `<div class="validation-subsection">`;
+                            html += `<div class="validation-subsection-title">⚠️ Missing Director - TMDB suggestion</div>`;
+                            
+                            for (const director of tmdbDirectors) {
+                                html += `
+                                    <div class="validation-item suggestion">
+                                        <span class="validation-status">+</span>
+                                        <div class="validation-name">
+                                            <div class="excel-name">${director.name} <span class="role-tag">Director</span></div>
+                                            <div class="tmdb-name">From TMDB credits</div>
+                                        </div>
+                                        <div class="validation-action">
+                                            <button class="validation-btn add" onclick="addCrewMember('${escapeQuotes(director.name)}', 'Director', this)">Add</button>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            
+                            html += `</div>`;
+                        }
+                    }
+                    
                     html += `</div>`;
+                } else {
+                    // No crew in XML - still check for missing Director from TMDB
+                    const tmdbDirectors = tmdbCrewFull.filter(c => 
+                        c.job && c.job.toLowerCase() === 'director'
+                    );
+                    
+                    if (tmdbDirectors.length > 0) {
+                        html += `<div class="validation-section">`;
+                        html += `<div class="validation-section-title">Crew (0)</div>`;
+                        html += `<div class="validation-subsection">`;
+                        html += `<div class="validation-subsection-title">⚠️ Missing Director - TMDB suggestion</div>`;
+                        
+                        for (const director of tmdbDirectors) {
+                            html += `
+                                <div class="validation-item suggestion">
+                                    <span class="validation-status">+</span>
+                                    <div class="validation-name">
+                                        <div class="excel-name">${director.name} <span class="role-tag">Director</span></div>
+                                        <div class="tmdb-name">From TMDB credits</div>
+                                    </div>
+                                    <div class="validation-action">
+                                        <button class="validation-btn add" onclick="addCrewMember('${escapeQuotes(director.name)}', 'Director', this)">Add</button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        html += `</div>`;
+                        html += `</div>`;
+                    }
                 }
                 
                 if (!html) {
@@ -3259,16 +3324,16 @@
             
             // Director family
             if (normalized.includes('director') && (normalized.includes('co') || normalized.includes('co-'))) return 'Co-Director';
-            if (normalized.includes('director') || normalized === 'réalisateur') return 'Director';
+            if (normalized.includes('director') || normalized.includes('réalisateur') || normalized.includes('realisateur')) return 'Director';
             
             // Producer family (all producer types become Producer)
             if (normalized.includes('producer') || normalized.includes('producteur')) return 'Producer';
             
             // Writer family (all become Screenwriter)
             if (normalized.includes('writer') || normalized.includes('screenplay') || 
-                normalized.includes('scénariste') || normalized.includes('screenwriter') ||
-                normalized.includes('scenarist') || normalized.includes('author') ||
-                normalized.includes('auteur')) return 'Screenwriter';
+                normalized.includes('scénariste') || normalized.includes('scenariste') ||
+                normalized.includes('screenwriter') || normalized.includes('scenarist') || 
+                normalized.includes('author') || normalized.includes('auteur')) return 'Screenwriter';
             
             // Composer
             if (normalized.includes('composer') || normalized.includes('compositeur') ||
@@ -3743,6 +3808,9 @@
             // Remove leading/trailing dashes
             cleaned = cleaned.replace(/^[-–]+|[-–]+$/g, '').trim();
             
+            // Remove trailing period
+            cleaned = cleaned.replace(/\.\s*$/, '').trim();
+            
             // Extract year (4 digits)
             const yearMatch = cleaned.match(/(\d{4})/);
             const year = yearMatch ? yearMatch[1] : '';
@@ -3753,8 +3821,8 @@
             // Remove leading dashes/slashes after year removal
             companiesPart = companiesPart.replace(/^[-–\/\s]+/, '').trim();
             
-            // Split by slash, dash, or emdash to get individual companies
-            const companies = companiesPart.split(/\s*[\/–-]\s*/).filter(c => c.trim());
+            // Split by comma, slash, dash, or emdash to get individual companies
+            const companies = companiesPart.split(/\s*[,\/–-]\s*/).filter(c => c.trim());
             
             // Format all production companies
             const formattedCompanies = companies.map(c => formatCompanyName(c.trim())).filter(Boolean);
@@ -4154,17 +4222,21 @@
         function parseCrew(crewData) {
             if (!crewData || crewData.length === 0) return '';
             
-            // List of production company indicators
+            // List of production company indicators - must match as whole words
             const productionIndicators = [
                 'Productions', 'Production', 'Films', 'Studio', 'Entertainment', 
-                'Pictures', 'PRODUCTIONS', 'Cinéma', 'Cinema', 'RTBF', 'TV', 'Télévision',
+                'Pictures', 'Cinéma', 'Cinema', 'RTBF', 'TV', 'Télévision',
                 'Art', 'Media', 'VOO', 'Be Tv', 'France 2', 'France 3', 'TF1',
-                'Canal', 'M6', 'Arte', 'Pan Cinéma', 'Pan '
+                'Canal', 'M6', 'Arte', 'Pan Cinéma'
             ];
             
             function isProductionCompany(name) {
                 const lower = name.toLowerCase();
-                return productionIndicators.some(ind => lower.includes(ind.toLowerCase()));
+                // Match whole words only using word boundary regex
+                return productionIndicators.some(ind => {
+                    const pattern = new RegExp(`\\b${ind.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+                    return pattern.test(lower);
+                });
             }
             
             // Helper to check if a word is ALL CAPS
@@ -4648,6 +4720,58 @@
                 generatedXML = generatedXML.replace(castEndRegex, castMemberXml + '\n    </cast>');
             } else {
                 alert('Could not find cast section in XML');
+                return;
+            }
+            
+            // Update the XML display
+            document.getElementById('xmlOutput').innerHTML = highlightXML(generatedXML);
+            
+            // Also update the textarea if in edit mode
+            const xmlEditor = document.getElementById('xmlEditor');
+            if (xmlEditor) {
+                xmlEditor.value = generatedXML;
+            }
+            
+            // Update button state
+            button.textContent = 'Added';
+            button.classList.remove('add');
+            button.classList.add('applied');
+            button.onclick = null;
+            
+            // Update the validation item
+            const item = button.closest('.validation-item');
+            if (item) {
+                item.classList.remove('suggestion');
+                item.classList.add('valid');
+                const statusEl = item.querySelector('.validation-status');
+                if (statusEl) {
+                    statusEl.innerHTML = '<span class="status-ok">✓</span>';
+                }
+            }
+        }
+
+        // Add crew member to XML (for TMDB suggestions)
+        function addCrewMember(name, role, button) {
+            if (!generatedXML) {
+                alert('Please generate XML first');
+                return;
+            }
+            
+            // Create the crew member XML
+            const crewMemberXml = `
+      <crew_member>
+        <display_name>${name}</display_name>
+        <roles>
+          <role>${role}</role>
+        </roles>
+      </crew_member>`;
+            
+            // Find the </crew> closing tag and insert before it
+            const crewEndRegex = /(\s*)<\/crew>/;
+            if (crewEndRegex.test(generatedXML)) {
+                generatedXML = generatedXML.replace(crewEndRegex, crewMemberXml + '\n    </crew>');
+            } else {
+                alert('Could not find crew section in XML');
                 return;
             }
             
